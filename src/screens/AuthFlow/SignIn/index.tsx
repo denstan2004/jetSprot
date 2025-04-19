@@ -9,25 +9,19 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserRequest } from "@/store/redux/user/UserSlice";
 import { useEffect, useState } from "react";
 import { RootState, AppDispatch } from "@/store/redux/store";
+import { getData } from "@/API/userAPI";
 
 export const SignIn = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { loading, error, data } = useSelector(
-    (state: RootState) => state.user
-  );
 
   const handleSignIn = () => {
-    dispatch(fetchUserRequest());
+    getData(email, password);
   };
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -50,17 +44,15 @@ export const SignIn = () => {
             onChangeText={setPassword}
           />
         </View>
-        {error && <Text style={styles.errorText}>{error}</Text>}
         <Text style={styles.forgotPassword}>Forgot password?</Text>
       </View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.button]}
           onPress={handleSignIn}
-          disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? "Signing in..." : "Sign in"}
+
           </Text>
         </TouchableOpacity>
       </View>
