@@ -12,12 +12,15 @@ interface jwtInt {
 }
 
 export const getData = async (userName: string, password: string) => {
-  const data: loginRes = await axios.post(
-    "http://127.0.0.1:8000/api/auth/login/",
-    {username: userName , password: password}
-  );
-
-  const assecToken = jwtDecode(data.access);
-
-  console.log(assecToken);
+  try {
+    const data = await axios.post(
+      "http://192.168.0.102:8000/api/auth/login/",
+      { username: userName, password: password }
+    );
+    console.log(data.data);
+    const assecToken = jwtDecode(data.data.access);
+    console.log(assecToken);
+  } catch (err) {
+    console.error(err);
+  }
 };

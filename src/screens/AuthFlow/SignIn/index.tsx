@@ -47,13 +47,8 @@ export const SignIn = () => {
         <Text style={styles.forgotPassword}>Forgot password?</Text>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button]}
-          onPress={handleSignIn}
-        >
-          <Text style={styles.buttonText}>
-
-          </Text>
+        <TouchableOpacity style={[styles.button]} onPress={handleSignIn}>
+          <Text style={styles.buttonText}>pass</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
