@@ -1,5 +1,5 @@
 import { rem } from "@/theme/units";
-import { useNavigation } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import {
   SafeAreaView,
   Text,
@@ -11,20 +11,37 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { RootState, AppDispatch } from "@/store/redux/store";
-import { getData } from "@/API/userAPI";
+import { signInData } from "@/API/user/signInUser";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 
 export const SignIn = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigation();
+  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
+  const sel = useSelector((state: RootState) => state.user.userData);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleSignIn = () => {
-    getData(email, password);
+  const [errorVisibility, setErrorVisibility] = useState(false);
+  const handleSignIn = async () => {
+    const res = await signInData(email, password, dispatch);
+    console.log("res", res);
+    if (res) {
+      navigation.navigate("Home");
+    } else {
+      setErrorVisibility(true);
+    }
   };
+  useEffect(() => {
+    if (errorVisibility === true)
+      setTimeout(() => {
+        setErrorVisibility(false);
+      }, 3000);
+  }, [errorVisibility]);
 
   return (
     <SafeAreaView style={styles.container}>
+      {errorVisibility && (
+        <Text style={{ position: "absolute", color: "red" }}>error</Text>
+      )}
       <Text style={styles.header}>Sign in</Text>
       <View style={styles.inputContainer}>
         <View style={styles.inputWrapper}>
@@ -47,7 +64,12 @@ export const SignIn = () => {
         <Text style={styles.forgotPassword}>Forgot password?</Text>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.button]} onPress={handleSignIn}>
+        <TouchableOpacity
+          style={[styles.button]}
+          onPress={() => {
+            handleSignIn();
+          }}
+        >
           <Text style={styles.buttonText}>pass</Text>
         </TouchableOpacity>
       </View>

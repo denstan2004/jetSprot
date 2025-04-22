@@ -3,16 +3,16 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { persistReducer, persistStore } from "redux-persist";
-import userSlice from "./slices/userSlice";
+import userReducer from "./slices/userSlice";
 
 const rootReducer = combineReducers({
-  user: userSlice,
+  user: userReducer,
 });
 
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: ["user"], // тільки basket буде збережено
+  whitelist: ["user"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

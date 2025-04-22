@@ -1,4 +1,8 @@
+import { signUpData } from "@/API/user/signUpUser";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+import { AppDispatch } from "@/store/redux/store";
 import { rem } from "@/theme/units";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import {
   SafeAreaView,
@@ -8,10 +12,36 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { useDispatch } from "react-redux";
+//TODO make validation for firstname lastname
 export const SignUp = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
+  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
+
+  const handleSignUp = async () => {
+    //TODO make error show
+    console.log("handleSignUp");
+    const res = await signUpData(
+      name,
+      password,
+      email,
+      firstName,
+      lastName,
+      dispatch
+    );
+    console.log("res", res);
+    if (res) {
+      navigation.navigate("Home");
+    } else {
+      console.log("error");
+    }
+  };
+  //TODO investigate why not navigating
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Sign up</Text>
@@ -25,6 +55,25 @@ export const SignUp = () => {
             onChangeText={setName}
           />
         </View>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholderTextColor={"white"}
+            placeholder="First Name"
+            style={styles.input}
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+        </View>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholderTextColor={"white"}
+            placeholder="Last Name"
+            style={styles.input}
+            value={lastName}
+            onChangeText={setLastName}
+          />
+        </View>
+
         <View style={styles.inputWrapper}>
           <TextInput
             placeholder="Email"
@@ -44,10 +93,25 @@ export const SignUp = () => {
             onChangeText={setPassword}
           />
         </View>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholderTextColor={"white"}
+            placeholder="Repeat Password"
+            secureTextEntry
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+          />
+        </View>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Sign in</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            handleSignUp();
+          }}
+        >
+          <Text style={styles.buttonText}>Sign up</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -72,7 +136,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 64,
     fontFamily: "Inter_700Bold",
-    marginTop: rem(203),
+    marginTop: rem(103),
     color: "#5B3400",
     textAlign: "center",
     width: "100%",
@@ -104,6 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   buttonContainer: {
+    backgroundColor: "red",
     display: "flex",
     justifyContent: "center",
     alignItems: "flex-end",

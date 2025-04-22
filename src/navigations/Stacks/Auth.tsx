@@ -4,12 +4,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { SignIn } from "@/screens/AuthFlow/SignIn/";
 import React from "react";
-import { Text, View } from "react-native";
 import { SignUp } from "@/screens/AuthFlow/SignUp";
+import { Home } from "@/screens/MainFlow/Home";
+
 export type AuthStackParamList = {
   Authorization: undefined;
   SignIn: undefined;
   SignUp: undefined;
+  Home:undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -33,6 +35,14 @@ export function AuthNavigator() {
         name="SignUp"
         component={SignUp}
       />
+  
+       <AuthStack.Screen
+        options={screenOptions}
+        name="Home"
+        component={Home}
+      />
     </AuthStack.Navigator>
   );
 }
+
+//HOME(TOOLBAR) // 1 2 3 4

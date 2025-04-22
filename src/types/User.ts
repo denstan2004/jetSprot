@@ -1,12 +1,12 @@
 export interface User {
-  id: string;
+  id: number;
+  is_staff: boolean;
+  last_login: null;
   username: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  password: string;
-  token: string;
-  refreshToken: string;
-  profilePicture: string;
+  birth_date: string;
+  pfp_url: string;
   rating: number;
 }

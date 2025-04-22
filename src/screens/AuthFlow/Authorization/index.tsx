@@ -16,6 +16,7 @@ export const Authorization = () => {
   const handleSignUpPress = () => {
     navigation.navigate("SignUp");
   };
+
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={[styles.mainTextWrapper1]}>
