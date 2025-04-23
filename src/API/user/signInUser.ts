@@ -43,7 +43,7 @@ export const signInData = async (
     );
     return true
   } catch (err) {
-    return false 
     console.error(err);
+    return false 
   }
 };

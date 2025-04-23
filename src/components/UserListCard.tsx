@@ -6,10 +6,17 @@ interface UserCardProps {
   last_name: string;
   rating: number;
   pfpUrl: string;
-  userId:string;
+  userId: string;
 }
 
-const UserCard = ({ username, first_name, last_name, rating, pfpUrl,userId }: UserCardProps) => {
+const UserCard = ({
+  username,
+  first_name,
+  last_name,
+  rating,
+  pfpUrl,
+  userId,
+}: UserCardProps) => {
   return (
     <View style={styles.card}>
       <Image source={{ uri: pfpUrl }} style={styles.profileImage} />
@@ -26,13 +33,13 @@ const UserCard = ({ username, first_name, last_name, rating, pfpUrl,userId }: Us
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFBE4',
+    flexDirection: "row",
+    backgroundColor: "#FFFBE4",
     padding: 15,
     marginVertical: 10,
     borderRadius: 10,
     elevation: 3, // Adds shadow for Android
-    shadowColor: '#000', // Shadow for iOS
+    shadowColor: "#000", // Shadow for iOS
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -44,20 +51,20 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   textContainer: {
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   username: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#5B3400',
+    fontWeight: "bold",
+    color: "#5B3400",
   },
   name: {
     fontSize: 14,
-    color: '#AC591A',
+    color: "#AC591A",
   },
   rating: {
     fontSize: 12,
-    color: '#FF0000',
+    color: "#FF0000",
   },
 });
 

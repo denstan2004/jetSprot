@@ -18,7 +18,7 @@ export const UserPage = ({ userId }: Props) => {
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const [followers, setFollowers] = useState<User[]>([]);
   const handleNavigateToFolowers = () => {
-    navigation.navigate("ListUsers", { followers: followers});
+    navigation.navigate("ListUsers", { followers: followers });
   };
   // const [isLocalUser, setIsLocalUser] = useState(userId === undefined);
 
@@ -26,11 +26,11 @@ export const UserPage = ({ userId }: Props) => {
     if (userId !== undefined) {
       console.log("userId", userId);
       const response = await getUserFollowers(userId);
-      return response 
+      return response;
     } else if (sel !== null) {
       console.log("sel.id", sel.id);
       const response = await getUserFollowers(sel.id.toString());
-      return response 
+      return response;
     }
     return [];
   };
@@ -39,7 +39,6 @@ export const UserPage = ({ userId }: Props) => {
     const fetchFollowersCount = async () => {
       const followers = await getFollowersCount();
       setFollowers(followers || []);
-
     };
 
     fetchFollowersCount();
