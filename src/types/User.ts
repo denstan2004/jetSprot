@@ -1,12 +1,12 @@
 export interface User {
   id: number;
-  is_staff: boolean;
+  is_staff: boolean; 
   last_login: null;
-  username: string;
-  first_name: string;
-  last_name: string;
+  username: string; //+
+  first_name: string ; //+
+  last_name: string;//+
   email: string;
   birth_date: string;
-  pfp_url: string;
-  rating: number;
+  pfp_url: string;//+ === "" default avatar
+  rating: number;//+
 }

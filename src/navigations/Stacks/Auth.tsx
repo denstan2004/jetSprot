@@ -6,12 +6,15 @@ import { SignIn } from "@/screens/AuthFlow/SignIn/";
 import React from "react";
 import { SignUp } from "@/screens/AuthFlow/SignUp";
 import { Home } from "@/screens/MainFlow/Home";
+import { ListUsers } from "@/screens/ListUsers";
+import { User } from "@/types/User";
 
 export type AuthStackParamList = {
   Authorization: undefined;
   SignIn: undefined;
   SignUp: undefined;
   Home:undefined;
+  ListUsers:{ followers: User[] };
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -41,8 +44,11 @@ export function AuthNavigator() {
         name="Home"
         component={Home}
       />
+         <AuthStack.Screen
+        options={screenOptions}
+        name="ListUsers"
+        component={ListUsers}
+      />
     </AuthStack.Navigator>
   );
 }
-
-//HOME(TOOLBAR) // 1 2 3 4

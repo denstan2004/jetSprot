@@ -21,6 +21,7 @@ export const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorVisibility, setErrorVisibility] = useState(false);
+
   const handleSignIn = async () => {
     const res = await signInData(email, password, dispatch);
     console.log("res", res);
@@ -30,6 +31,7 @@ export const SignIn = () => {
       setErrorVisibility(true);
     }
   };
+
   useEffect(() => {
     if (errorVisibility === true)
       setTimeout(() => {
@@ -147,3 +149,4 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
+//

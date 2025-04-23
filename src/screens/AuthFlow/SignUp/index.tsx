@@ -13,18 +13,45 @@ import {
   View,
 } from "react-native";
 import { useDispatch } from "react-redux";
-//TODO make validation for firstname lastname
 export const SignUp = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+
+  const [validNameError, setValidNameError] = useState<string | null>(null);
+
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [repeatPassword, setRepeatPassword] = useState("");
+
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
 
+  const isValidateName = (name: string) => {
+    return /^[A-Za-z]+$/.test(name);
+  };
+
   const handleSignUp = async () => {
-    //TODO make error show
+    setValidNameError(null);
+    setPasswordError(null);
+
+    
+    if (!isValidateName(firstName) || !isValidateName(lastName)) {
+      setValidNameError("Name can only contain letters");
+      return;
+    }
+
+    if (password !== repeatPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    if(password.length < 8) {
+      setPasswordError("Password must be at least 6 characters");
+      return;
+    }
+
     console.log("handleSignUp");
     const res = await signUpData(
       name,
@@ -34,14 +61,12 @@ export const SignUp = () => {
       lastName,
       dispatch
     );
-    console.log("res", res);
     if (res) {
       navigation.navigate("Home");
     } else {
       console.log("error");
     }
   };
-  //TODO investigate why not navigating
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Sign up</Text>
@@ -73,6 +98,7 @@ export const SignUp = () => {
             onChangeText={setLastName}
           />
         </View>
+        {validNameError && <Text style={styles.validNameError}>{validNameError}</Text>}
 
         <View style={styles.inputWrapper}>
           <TextInput
@@ -99,10 +125,11 @@ export const SignUp = () => {
             placeholder="Repeat Password"
             secureTextEntry
             style={styles.input}
-            value={password}
-            onChangeText={setPassword}
+            value={repeatPassword}
+            onChangeText={setRepeatPassword}
           />
         </View>
+        {passwordError && <Text style={styles.validNameError}>{passwordError}</Text>}
       </View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -175,4 +202,10 @@ const styles = StyleSheet.create({
     marginRight: rem(35),
     marginTop: rem(100),
   },
+  validNameError: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: rem(10),
+    textAlign: 'center',
+  }
 });

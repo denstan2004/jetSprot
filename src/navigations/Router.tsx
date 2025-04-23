@@ -9,7 +9,6 @@ import store, { persistor } from "@/store/redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Tabs from "./Tabs";
 
 const queryClient = new QueryClient();
 

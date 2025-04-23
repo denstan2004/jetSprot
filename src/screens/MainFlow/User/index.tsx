@@ -4,30 +4,52 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { styles } from "./styles";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
+import getUserFollowers from "@/API/user/getUserFollowers";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+import { User } from "@/types/User";
 
 interface Props {
   userId?: string;
 }
-
-export const UserPage = (userId: Props) => {
+// 2) listUsers(followers),
+export const UserPage = ({ userId }: Props) => {
   const sel = useSelector((state: RootState) => state.user.userData);
+  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
+  const [followers, setFollowers] = useState<User[]>([]);
+  const handleNavigateToFolowers = () => {
+    navigation.navigate("ListUsers", { followers: followers});
+  };
+  // const [isLocalUser, setIsLocalUser] = useState(userId === undefined);
 
-  const [isLocalUser, setIsLocalUser] = useState(userId === undefined);
+  const getFollowersCount = async () => {
+    if (userId !== undefined) {
+      console.log("userId", userId);
+      const response = await getUserFollowers(userId);
+      return response 
+    } else if (sel !== null) {
+      console.log("sel.id", sel.id);
+      const response = await getUserFollowers(sel.id.toString());
+      return response 
+    }
+    return [];
+  };
 
   useEffect(() => {
-    if (userId !== undefined) {
-      // take user by id
-    }else {
-      // take user state by id
-    }
-  }, []);
+    const fetchFollowersCount = async () => {
+      const followers = await getFollowersCount();
+      setFollowers(followers || []);
+
+    };
+
+    fetchFollowersCount();
+  }, [userId, sel]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerBackground}>
         <View style={styles.headerTopRow}>
           <View style={styles.iconGroup}>
-            
             <TouchableOpacity style={styles.icon}>
               <Ionicons name="heart-outline" size={24} color="white" />
             </TouchableOpacity>
@@ -46,8 +68,10 @@ export const UserPage = (userId: Props) => {
 
         <View style={styles.row}>
           <View style={styles.box}>
-            <Ionicons name="people-outline" size={18} color="white" />
-            <Text style={styles.text}>485</Text>
+            <TouchableOpacity onPress={handleNavigateToFolowers}>
+              <Ionicons name="people-outline" size={18} color="white" />
+              <Text style={styles.text}>{followers.length}</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.box}>
@@ -64,4 +88,3 @@ export const UserPage = (userId: Props) => {
     </SafeAreaView>
   );
 };
-
