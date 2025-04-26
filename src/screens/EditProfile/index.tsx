@@ -16,11 +16,15 @@ import { RootState } from "@/store/redux/store";
 import { styles } from "./styles";
 import { updateUser } from "@/store/redux/slices/userSlice";
 import { User } from "@/types/User";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 
 export const EditProfile = () => {
   const user = useSelector((state: RootState) => state.user.userData);
   const token = useSelector((state: RootState) => state.user.accessToken);
+  const state = useSelector((state: RootState) => state);
   const dispatch = useDispatch();
+  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
 
   const [userData, setUserData] = useState({
     username: "",
@@ -43,6 +47,7 @@ export const EditProfile = () => {
     }
   }, [user?.id, token]);
 
+
   const handleSave = async () => {
     try {
       const formData = new FormData();
@@ -61,22 +66,27 @@ export const EditProfile = () => {
           },
         }
       );
-      console.log("Updated user:", updatedUser.data);
+      console.log("Updated user:", updatedUser.data.first_name);
       dispatch(updateUser(updatedUser.data));
     } catch (err) {
       console.error("PATCH error", err);
     }
   };
 
-  //   const pickImage = async () => {};
-
+  const hadleBack = () => {
+    console.log("back");
+    navigation.navigate("Home");
+  };
   return (
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
       style={styles.root}
     >
-      <StatusBar translucent backgroundColor="transparent" />
+      <TouchableOpacity style={[styles.backButton]} onPress={hadleBack}>
+        <View style={styles.backButtonInner} />
+      </TouchableOpacity>
+
       <ImageBackground
         source={require("../../assets/Basketball2.png")}
         style={styles.backgroundImage}
@@ -99,7 +109,6 @@ export const EditProfile = () => {
         <TextInput
           style={styles.input}
           placeholder={userData.first_name}
-          
           onChangeText={(text) =>
             setUserData({ ...userData, first_name: text })
           }

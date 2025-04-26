@@ -17,6 +17,8 @@ import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { User } from "@/types/User";
 import axios from "axios";
 import { updateUser } from "@/store/redux/slices/userSlice";
+import { getPostUser as getPostUserApi } from "@/API/user/getPostUser";
+import Post from "@/components/Post";
 
 interface Props {
   userId?: string;
@@ -28,10 +30,12 @@ export const UserPage = ({ userId }: Props) => {
   const [followers, setFollowers] = useState<User[]>([]);
   const [userName, setUserName] = useState(sel?.username);
   const [firstName, setFirstName] = useState(sel?.first_name);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+
   const handleNavigateToFolowers = () => {
     navigation.navigate("ListUsers", { followers });
   };
-
   const handleNavigateToEditProfile = () => {
     navigation.navigate("EditProfile");
   };
@@ -50,7 +54,6 @@ export const UserPage = ({ userId }: Props) => {
     );
     return response.data;
   };
-
   useEffect(() => {
     const fetchFollowers = async () => {
       const followers = await getFollowersCount();
@@ -65,9 +68,33 @@ export const UserPage = ({ userId }: Props) => {
       dispatch(updateUser(user));
     };
 
+    const fetchPosts = async () => {
+      const id = userId || sel?.id.toString();
+      if (id) {
+        const posts: Post[] = await getPostUserApi(id);
+
+        setPosts(posts)
+      }
+      return [];
+    };
+
+
+    fetchPosts();
     fetchUser();
     fetchFollowers();
-  }, [userId, sel]);
+  }, []);
+
+  // const getPostUser = async () => {
+  //   const id = userId || sel?.id.toString();
+  //   if (id) {
+  //     return await getPostUserApi(id);
+  //   }
+  //   return [];
+  // };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -120,6 +147,20 @@ export const UserPage = ({ userId }: Props) => {
         style={styles.profileBody}
         resizeMode="cover"
       />
+{/* 
+      <View>
+        {posts.map((posts) => {
+          return (
+            <View key={posts.id} style={styles.postContainer}>
+              <Post
+                postImage={posts.image}
+                postText={posts.text}
+              />
+            </View>
+          );
+        })}
+      </View> */}
+      
 
       {/* <Modal
         transparent
@@ -149,12 +190,9 @@ export const UserPage = ({ userId }: Props) => {
               <Ionicons name="close" size={24} color="black" />
             </TouchableOpacity>
 
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-              Edit Profile
-            </Text>
           </View>
         </View>
-      </Modal> */}
+      </Modal>  */}
     </SafeAreaView>
   );
 };

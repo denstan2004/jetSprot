@@ -6,3 +6,5 @@ export interface SignUpScreenStylesProps {
 }
 
 export const useStyles = () => StyleSheet.create({});
+
+

@@ -28,8 +28,9 @@ const userSlice = createSlice({
     updateUser(state, { payload }: PayloadAction<User>) {
       return {
         ...state,    
-        ...payload,
+        userData: payload,
       }
+
     },
     logout(state) {
       state.accessToken = '';

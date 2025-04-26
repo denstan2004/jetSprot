@@ -19,9 +19,9 @@ export const Authorization = () => {
   const handleSignUpPress = () => {
     navigation.navigate("SignUp");
   };
-   useEffect(()=>{
-    
-   },[])
+  const handleTest = () => {
+    navigation.navigate("Home");
+  };
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={[styles.mainTextWrapper1]}>
@@ -48,6 +48,11 @@ export const Authorization = () => {
         <TouchableOpacity onPress={handleSignUpPress}>
           <View style={styles.signUpButton}>
             <Text style={styles.buttonText}>Sign Up</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleTest}>
+          <View style={styles.signUpButton}>
+            <Text style={styles.buttonText}>Home</Text>
           </View>
         </TouchableOpacity>
       </View>
