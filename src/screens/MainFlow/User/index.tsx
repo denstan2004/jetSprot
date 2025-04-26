@@ -1,47 +1,72 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  ImageBackground,
+  Modal,
+} from "react-native";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { styles } from "./styles";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
 import getUserFollowers from "@/API/user/getUserFollowers";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { User } from "@/types/User";
+import axios from "axios";
+import { updateUser } from "@/store/redux/slices/userSlice";
 
 interface Props {
   userId?: string;
 }
-// 2) listUsers(followers),
 export const UserPage = ({ userId }: Props) => {
   const sel = useSelector((state: RootState) => state.user.userData);
+  const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const [followers, setFollowers] = useState<User[]>([]);
+  const [userName, setUserName] = useState(sel?.username);
+  const [firstName, setFirstName] = useState(sel?.first_name);
   const handleNavigateToFolowers = () => {
-    navigation.navigate("ListUsers", { followers: followers });
+    navigation.navigate("ListUsers", { followers });
   };
-  // const [isLocalUser, setIsLocalUser] = useState(userId === undefined);
+
+  const handleNavigateToEditProfile = () => {
+    navigation.navigate("EditProfile");
+  };
 
   const getFollowersCount = async () => {
-    if (userId !== undefined) {
-      console.log("userId", userId);
-      const response = await getUserFollowers(userId);
-      return response;
-    } else if (sel !== null) {
-      console.log("sel.id", sel.id);
-      const response = await getUserFollowers(sel.id.toString());
-      return response;
+    const id = userId || sel?.id.toString();
+    if (id) {
+      return await getUserFollowers(id);
     }
     return [];
   };
 
+  const getUserById = async (userId: string) => {
+    const response = await axios(
+      `http://192.168.0.101:8000/api/user/${userId}/`
+    );
+    return response.data;
+  };
+
   useEffect(() => {
-    const fetchFollowersCount = async () => {
+    const fetchFollowers = async () => {
       const followers = await getFollowersCount();
       setFollowers(followers || []);
     };
 
-    fetchFollowersCount();
+    const fetchUser = async () => {
+      if (!userId) return;
+      const user: User = await getUserById(userId);
+      setUserName(user.username);
+      setFirstName(user.first_name);
+      dispatch(updateUser(user));
+    };
+
+    fetchUser();
+    fetchFollowers();
   }, [userId, sel]);
 
   return (
@@ -52,38 +77,84 @@ export const UserPage = ({ userId }: Props) => {
             <TouchableOpacity style={styles.icon}>
               <Ionicons name="heart-outline" size={24} color="white" />
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.icon}>
+            <TouchableOpacity
+              onPress={handleNavigateToEditProfile}
+              style={styles.icon}
+            >
               <MaterialIcons name="edit" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <FontAwesome5 name="user-alt" size={40} color="white" />
+        <View style={styles.avatarSection}>
+          <View style={styles.leftSide}>
+            <Text style={styles.username}>{userName}</Text>
+            <View style={styles.avatar}>
+              <FontAwesome5 name="user-alt" size={40} color="white" />
+            </View>
+            <Text style={styles.name}>
+              {firstName} {sel?.last_name}
+            </Text>
+          </View>
+
+          <View style={styles.rightSide}>
+            <Text style={styles.role}>basketball/football player</Text>
+            <View style={styles.statsRow}>
+              <TouchableOpacity onPress={handleNavigateToFolowers}>
+                <View style={styles.statsItem}>
+                  <Ionicons name="people-outline" size={18} color="white" />
+                  <Text style={styles.text}>{followers.length}</Text>
+                </View>
+              </TouchableOpacity>
+              <View style={styles.statsItem}>
+                <Ionicons name="time-outline" size={18} color="white" />
+                <Text style={styles.text}>{sel?.rating}</Text>
+              </View>
+            </View>
           </View>
         </View>
+      </View>
 
-        <View style={styles.row}>
-          <View style={styles.box}>
-            <TouchableOpacity onPress={handleNavigateToFolowers}>
-              <Ionicons name="people-outline" size={18} color="white" />
-              <Text style={styles.text}>{followers.length}</Text>
+      <ImageBackground
+        source={require("../../../assets/Basketball2.png")}
+        style={styles.profileBody}
+        resizeMode="cover"
+      />
+
+      {/* <Modal
+        transparent
+        visible={modalVisible}
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+          }} 
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+              height: 300,
+            }}
+          >
+            <TouchableOpacity
+              onPress={closeModal}
+              style={{ alignSelf: "flex-end", padding: 4 }}
+            >
+              <Ionicons name="close" size={24} color="black" />
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.box}>
-            <Ionicons name="time-outline" size={18} color="white" />
-            <Text style={styles.text}>8 288 h</Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+              Edit Profile
+            </Text>
           </View>
         </View>
-      </View>
-
-      <View style={styles.profileBody}>
-        <Text style={styles.username}>Name</Text>
-        <Text style={styles.role}>football player</Text>
-      </View>
+      </Modal> */}
     </SafeAreaView>
   );
 };

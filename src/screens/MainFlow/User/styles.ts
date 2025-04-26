@@ -1,6 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
@@ -10,79 +8,96 @@ export const styles = StyleSheet.create({
 
   headerBackground: {
     paddingHorizontal: 20,
+    marginTop: 40,
   },
+
   headerTopRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
+    marginTop: -40,
   },
+
   iconGroup: {
     flexDirection: "row",
     gap: 15,
   },
+
   icon: {
     padding: 5,
   },
-  avatarContainer: {
-    alignItems: "center",
+
+  avatarSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginTop: 10,
   },
+
+  leftSide: {
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    marginTop: -20,
+  },
+  rightSide: {
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    gap: 10,
+    maxWidth: 100,
+  },
+
   avatar: {
     width: 70,
     height: 70,
     borderRadius: 35,
     backgroundColor: "#AC591A",
     justifyContent: "center",
-    alignItems: "center", 
+    alignItems: "center",
+    marginVertical: 6,
   },
-  row: {
+
+  username: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 5,
+  },
+
+  name: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#000",
+  },
+
+  role: {
+    fontSize: 14,
+    color: "#FFF",
+    marginBottom: 8,
+    maxWidth: 100,
+  },
+
+  statsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
-    paddingHorizontal: 40,
+    gap: 20,
   },
-  box: {
+
+  statsItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
   },
+
   text: {
     color: "white",
     fontSize: 16,
     fontWeight: "500",
   },
+
   profileBody: {
     flex: 1,
-    backgroundColor: "#fdf6ec",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    marginTop: 20,
-    paddingTop: 30,
-    alignItems: "center",
-  },
-  username: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#000",
-  },
-  role: {
-    fontSize: 14,
-    color: "#444",
-    marginTop: 5,
-  },
-  bottomNavigation: {
-    position: "absolute",
-    bottom: 0,
-    width: width,
-    backgroundColor: "#AC591A",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    height: 70,
-  },
-  navText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "600",
-    textAlign: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: "#FFFBE4",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
 });

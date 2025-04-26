@@ -1,7 +1,7 @@
 import { RootState } from "@/store/redux/store";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView} from "react-native";
 import { useSelector } from "react-redux";
 
 interface Post {
@@ -18,13 +18,14 @@ const Post = async () => {
   const fetchPosts = async () => {
     try {
       const response = await axios.get(
-        "http://192.168.0.105:8000/api/user/1/publications/"
+        "http://127.0.0.1:8000/api/user/1/publications/"
       );
       setPosts(response.data);
     } catch (err) {
       console.error(err);
     }
   };
+
 
   useEffect(() => {
     fetchPosts();
@@ -51,34 +52,35 @@ const Post = async () => {
 
 export default Post;
 
+
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-  postCard: {
-    backgroundColor: "#fdf6ec",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#AC591A",
-    marginBottom: 4,
-  },
-  content: {
-    fontSize: 14,
-    color: "#5B3400",
-  },
-  author: {
-    fontSize: 12,
-    marginTop: 8,
-    color: "#AC591A",
-  },
-});
+    container: {
+      padding: 16,
+    },
+    postCard: {
+      backgroundColor: "#fdf6ec",
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 3,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#AC591A",
+      marginBottom: 4,
+    },
+    content: {
+      fontSize: 14,
+      color: "#5B3400",
+    },
+    author: {
+      fontSize: 12,
+      marginTop: 8,
+      color: "#AC591A",
+    },
+  });

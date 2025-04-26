@@ -4,10 +4,13 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStyles } from "./styles";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/redux/store";
 
 export const Authorization = () => {
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
+  const sel = useSelector((state: RootState) => state.user);
 
   const styles = useStyles();
   const handleSignInPress = () => {
@@ -16,7 +19,9 @@ export const Authorization = () => {
   const handleSignUpPress = () => {
     navigation.navigate("SignUp");
   };
-
+   useEffect(()=>{
+    
+   },[])
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={[styles.mainTextWrapper1]}>

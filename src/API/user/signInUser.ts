@@ -20,7 +20,7 @@ export const signInData = async (
 ) => {
   try {
     const data = await axios.post<loginRes>(
-      "http://192.168.0.105:8000/api/auth/login/",
+      "http://192.168.0.101:8000/api/auth/login/",
       {
         username: userName,
         password: password,
@@ -31,7 +31,7 @@ export const signInData = async (
     const userId = assecToken.user_id;
 
     const getUserData = await axios.get<User>(
-      `http://192.168.0.105:8000/api/user/${userId}`
+      `http://192.168.0.101:8000/api/user/${userId}`
     );
 
     dispatch(
@@ -39,6 +39,7 @@ export const signInData = async (
         accessToken: access,
         refreshToken: refresh,
         userData: getUserData.data,
+        //TODO password
       })
     );
     return true

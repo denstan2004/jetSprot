@@ -13,7 +13,7 @@ export const signUpData = async (
   dispatch: AppDispatch
 ) => {
   try {
-    const data = await axios.post<User>("http://192.168.0.105:8000/api/user/", {
+    const data = await axios.post<User>("http://192.168.0.101:8000/api/user/", {
       username,
       email,
       password,
@@ -21,7 +21,7 @@ export const signUpData = async (
       last_name,
     });
     const data2 = await axios.post<loginRes>(
-      "http://192.168.0.105:8000/api/auth/login/",
+      "http://192.168.0.101:8000/api/auth/login/",
       {
         username,
         password: password,
@@ -34,11 +34,12 @@ export const signUpData = async (
         accessToken: access,
         refreshToken: refresh,
         userData: data.data,
+        //TODO password
       })
     );
     return true;
   } catch (err) {
-    return false;
     console.error(err);
+    return false;
   }
 };

@@ -25,8 +25,19 @@ const userSlice = createSlice({
         userData: payload.userData,
       };
     },
+    updateUser(state, { payload }: PayloadAction<User>) {
+      return {
+        ...state,    
+        ...payload,
+      }
+    },
+    logout(state) {
+      state.accessToken = '';
+      state.refreshToken = '';
+      state.userData = null;
+    }
   },
 });
-export const { setUser } = userSlice.actions;
+export const { setUser, updateUser, logout} = userSlice.actions;
 
 export default userSlice.reducer;
