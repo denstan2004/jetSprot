@@ -33,13 +33,14 @@ export const ListUsers = () => {
       );
       setPfpUrls(urls);
     };
-
     fetchProfilePictures();
   }, [followers]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFBE4" }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 15, paddingTop: 10 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 15, paddingTop: 10 }}
+      >
         {followers.map((user) => (
           <UserCard
             key={user.id}
@@ -47,7 +48,7 @@ export const ListUsers = () => {
             first_name={user.first_name}
             last_name={user.last_name}
             rating={user.rating}
-            pfpUrl={pfpUrls[user.id] || ""}
+            pfpUrl={pfpUrls[user.id]}
             userId={user.id.toString()}
           />
         ))}

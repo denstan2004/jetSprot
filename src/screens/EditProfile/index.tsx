@@ -66,7 +66,7 @@ export const EditProfile = () => {
           },
         }
       );
-      console.log("Updated user:", updatedUser.data.first_name);
+      // console.log("Updated user:", updatedUser.data.first_name);
       dispatch(updateUser(updatedUser.data));
     } catch (err) {
       console.error("PATCH error", err);
@@ -74,7 +74,7 @@ export const EditProfile = () => {
   };
 
   const hadleBack = () => {
-    console.log("back");
+    // console.log("back");
     navigation.navigate("Home");
   };
   return (

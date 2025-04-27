@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ImageBackground,
   Modal,
+  ScrollView,
 } from "react-native";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { styles } from "./styles";
@@ -18,6 +19,7 @@ import { User } from "@/types/User";
 import axios from "axios";
 import { updateUser } from "@/store/redux/slices/userSlice";
 import { getPostUser as getPostUserApi } from "@/API/user/getPostUser";
+import { Post as PostInterface } from "@/types/Post";
 import Post from "@/components/Post";
 
 interface Props {
@@ -31,7 +33,7 @@ export const UserPage = ({ userId }: Props) => {
   const [userName, setUserName] = useState(sel?.username);
   const [firstName, setFirstName] = useState(sel?.first_name);
   const [modalVisible, setModalVisible] = useState(false);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostInterface[]>([]);
 
   const handleNavigateToFolowers = () => {
     navigation.navigate("ListUsers", { followers });
@@ -55,6 +57,9 @@ export const UserPage = ({ userId }: Props) => {
     return response.data;
   };
   useEffect(() => {
+    console.log("Posts:", posts);
+  }, [posts]);
+  useEffect(() => {
     const fetchFollowers = async () => {
       const followers = await getFollowersCount();
       setFollowers(followers || []);
@@ -71,13 +76,11 @@ export const UserPage = ({ userId }: Props) => {
     const fetchPosts = async () => {
       const id = userId || sel?.id.toString();
       if (id) {
-        const posts: Post[] = await getPostUserApi(id);
-
-        setPosts(posts)
+        const response = await getPostUserApi(id);
+        setPosts(response || []);
       }
       return [];
     };
-
 
     fetchPosts();
     fetchUser();
@@ -146,53 +149,15 @@ export const UserPage = ({ userId }: Props) => {
         source={require("../../../assets/Basketball2.png")}
         style={styles.profileBody}
         resizeMode="cover"
-      />
-{/* 
-      <View>
-        {posts.map((posts) => {
-          return (
-            <View key={posts.id} style={styles.postContainer}>
-              <Post
-                postImage={posts.image}
-                postText={posts.text}
-              />
-            </View>
-          );
-        })}
-      </View> */}
-      
-
-      {/* <Modal
-        transparent
-        visible={modalVisible}
-        animationType="slide"
-        onRequestClose={closeModal}
       >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-          }} 
-        >
-          <View
-            style={{
-              backgroundColor: "white",
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 20,
-              height: 300,
-            }}
-          >
-            <TouchableOpacity
-              onPress={closeModal}
-              style={{ alignSelf: "flex-end", padding: 4 }}
-            >
-              <Ionicons name="close" size={24} color="black" />
-            </TouchableOpacity>
-
-          </View>
-        </View>
-      </Modal>  */}
+        <ScrollView contentContainerStyle={{ padding: 10 }}>
+          {posts.map((post, index) => (
+            <View key={index} style={{ marginVertical: 10 }}>
+              <Post post={post} />
+            </View>
+          ))}
+        </ScrollView>
+      </ImageBackground>
     </SafeAreaView>
   );
 };
