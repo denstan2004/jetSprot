@@ -1,16 +1,13 @@
 import { User } from "@/types/User";
 import axios from "axios";
+import { apiUrl } from "../apiUrl";
 
-const getUserFollowers = async (userId: string) => {
+export const getUserFollowers = async (userId: number) => {
   try {
-    const response = await axios.get<User[]>(
-      `http://192.168.0.101:8000/api/user/${userId}/follows/`
-    );
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return null;
+    const data = await axios.get<User[]>(`${apiUrl}/user/${userId}/followers/`);
+    return data.data;
+  } catch (err) {
+    console.log(err);
+    return [];
   }
 };
-
-export default getUserFollowers;

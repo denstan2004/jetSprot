@@ -12,7 +12,7 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { styles } from "./styles";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
-import getUserFollowers from "@/API/user/getUserFollowers";
+import { getUserFollowers } from "@/API/user/getUserFollowers";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { User } from "@/types/User";
@@ -21,6 +21,7 @@ import { updateUser } from "@/store/redux/slices/userSlice";
 import { getPostUser as getPostUserApi } from "@/API/user/getPostUser";
 import { Post as PostInterface } from "@/types/Post";
 import Post from "@/components/Post";
+import { apiUrl } from "@/API/apiUrl";
 
 interface Props {
   userId?: string;
@@ -45,15 +46,13 @@ export const UserPage = ({ userId }: Props) => {
   const getFollowersCount = async () => {
     const id = userId || sel?.id.toString();
     if (id) {
-      return await getUserFollowers(id);
+      return await getUserFollowers(parseInt(id));
     }
     return [];
   };
 
   const getUserById = async (userId: string) => {
-    const response = await axios(
-      `http://192.168.0.101:8000/api/user/${userId}/`
-    );
+    const response = await axios.get(`${apiUrl}/user/${userId}/`);
     return response.data;
   };
   useEffect(() => {

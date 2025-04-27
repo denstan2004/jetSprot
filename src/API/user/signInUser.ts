@@ -3,6 +3,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { AppDispatch } from "@/store/redux/store";
 import { setUser } from "@/store/redux/slices/userSlice";
+import { apiUrl } from "../apiUrl";
 
 export interface loginRes {
   access: string;
@@ -20,7 +21,7 @@ export const signInData = async (
 ) => {
   try {
     const data = await axios.post<loginRes>(
-      "http://192.168.0.101:8000/api/auth/login/",
+      `${apiUrl}/auth/login/`,
       {
         username: userName,
         password: password,
@@ -31,7 +32,7 @@ export const signInData = async (
     const userId = assecToken.user_id;
 
     const getUserData = await axios.get<User>(
-      `http://192.168.0.101:8000/api/user/${userId}`
+      `${apiUrl}/user/${userId}`
     );
 
     dispatch(
@@ -44,7 +45,7 @@ export const signInData = async (
     );
     return true
   } catch (err) {
-    console.error(err);
+    console.log(err);
     return false 
   }
 };

@@ -3,6 +3,7 @@ import { User } from "@/types/User";
 import axios from "axios";
 import { loginRes } from "./signInUser";
 import { setUser } from "@/store/redux/slices/userSlice";
+import { apiUrl } from "../apiUrl";
 
 export const signUpData = async (
   username: string,
@@ -13,20 +14,17 @@ export const signUpData = async (
   dispatch: AppDispatch
 ) => {
   try {
-    const data = await axios.post<User>("http://192.168.0.101:8000/api/user/", {
+    const data = await axios.post<User>(`${apiUrl}/user/`, {
       username,
       email,
       password,
       first_name,
       last_name,
     });
-    const data2 = await axios.post<loginRes>(
-      "http://192.168.0.101:8000/api/auth/login/",
-      {
-        username,
-        password: password,
-      }
-    );
+    const data2 = await axios.post<loginRes>(`${apiUrl}/auth/login/`, {
+      username,
+      password: password,
+    });
     const { access, refresh } = data2.data;
 
     dispatch(
@@ -39,7 +37,7 @@ export const signUpData = async (
     );
     return true;
   } catch (err) {
-    console.error(err);
+    console.error("Error signing up:", err);
     return false;
   }
 };

@@ -18,6 +18,7 @@ import { updateUser } from "@/store/redux/slices/userSlice";
 import { User } from "@/types/User";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+import { apiUrl } from "@/API/apiUrl";
 
 export const EditProfile = () => {
   const user = useSelector((state: RootState) => state.user.userData);
@@ -35,15 +36,21 @@ export const EditProfile = () => {
   });
 
   useEffect(() => {
-    if (user?.id && token) {
-      axios
-        .get(`http://192.168.0.101:8000/api/user/${user.id}/`, {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/user/${user.id}/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        })
-        .then((res) => setUserData(res.data))
-        .catch((err) => console.error("GET error", err));
+        });
+        setUserData(response.data);
+      } catch (error) {
+        console.error("GET error", error);
+      }
+    };
+
+    if (user?.id && token) {
+      fetchUserData();
     }
   }, [user?.id, token]);
 
@@ -57,7 +64,7 @@ export const EditProfile = () => {
       formData.append("date_of_birth", userData.date_of_birth);
 
       const updatedUser = await axios.patch<User>(
-        `http://192.168.0.101:8000/api/user/${user?.id}/`,
+        `${apiUrl}/user/${user?.id}/`,
         formData,
         {
           headers: {
