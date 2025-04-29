@@ -56,7 +56,7 @@ export const UserPage = ({ userId }: Props) => {
     return response.data;
   };
   useEffect(() => {
-    console.log("Posts:", posts);
+    // console.log("Posts:", posts);
   }, [posts]);
   useEffect(() => {
     const fetchFollowers = async () => {
@@ -119,7 +119,7 @@ export const UserPage = ({ userId }: Props) => {
           <View style={styles.leftSide}>
             <Text style={styles.username}>{userName}</Text>
             <View style={styles.avatar}>
-              <FontAwesome5 name="user-alt" size={40} color="white" />
+              {/* <FontAwesome5 name="user-alt" size={40} color="white" /> */}
             </View>
             <Text style={styles.name}>
               {firstName} {sel?.last_name}

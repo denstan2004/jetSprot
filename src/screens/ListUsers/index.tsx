@@ -24,14 +24,16 @@ export const ListUsers = () => {
           if (user.pfp_url) {
             try {
               const url = await getDownloadURL(ref(storage, user.pfp_url));
+              console.log("Fetched URL:", url);
               urls[user.id] = url;
             } catch (err) {
-              console.warn("Error loading image for", user.username);
+              console.warn("Error loading image for", err);
             }
           }
         })
       );
       setPfpUrls(urls);
+      console.log("Profile picture URLs:", urls);
     };
     fetchProfilePictures();
   }, [followers]);

@@ -38,7 +38,7 @@ export const EditProfile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/user/${user.id}/`, {
+        const response = await axios.get(`${apiUrl}/user/${user?.id}/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

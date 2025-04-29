@@ -11,8 +11,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useDispatch } from "react-redux";
+
 export const SignUp = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [name, setName] = useState("");
@@ -36,7 +39,6 @@ export const SignUp = () => {
     setValidNameError(null);
     setPasswordError(null);
 
-    
     if (!isValidateName(firstName) || !isValidateName(lastName)) {
       setValidNameError("Name can only contain letters");
       return;
@@ -47,7 +49,7 @@ export const SignUp = () => {
       return;
     }
 
-    if(password.length < 8) {
+    if (password.length < 8) {
       setPasswordError("Password must be at least 6 characters");
       return;
     }
@@ -67,83 +69,92 @@ export const SignUp = () => {
       console.log("error");
     }
   };
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Sign up</Text>
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholderTextColor={"white"}
-            placeholder="Name"
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-          />
-        </View>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholderTextColor={"white"}
-            placeholder="First Name"
-            style={styles.input}
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-        </View>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholderTextColor={"white"}
-            placeholder="Last Name"
-            style={styles.input}
-            value={lastName}
-            onChangeText={setLastName}
-          />
-        </View>
-        {validNameError && <Text style={styles.validNameError}>{validNameError}</Text>}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <Text style={styles.header}>Sign up</Text>
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholderTextColor={"white"}
+              placeholder="Name"
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholderTextColor={"white"}
+              placeholder="First Name"
+              style={styles.input}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholderTextColor={"white"}
+              placeholder="Last Name"
+              style={styles.input}
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
+          {validNameError && (
+            <Text style={styles.validNameError}>{validNameError}</Text>
+          )}
 
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholder="Email"
-            placeholderTextColor={"white"}
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholder="Email"
+              placeholderTextColor={"white"}
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholderTextColor={"white"}
+              placeholder="Password"
+              secureTextEntry
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholderTextColor={"white"}
+              placeholder="Repeat Password"
+              secureTextEntry
+              style={styles.input}
+              value={repeatPassword}
+              onChangeText={setRepeatPassword}
+            />
+          </View>
+          {passwordError && (
+            <Text style={styles.validNameError}>{passwordError}</Text>
+          )}
         </View>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholderTextColor={"white"}
-            placeholder="Password"
-            secureTextEntry
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-          />
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button]}
+            onPress={handleSignUp}
+          >
+            <Text style={styles.buttonText}>Sign up</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholderTextColor={"white"}
-            placeholder="Repeat Password"
-            secureTextEntry
-            style={styles.input}
-            value={repeatPassword}
-            onChangeText={setRepeatPassword}
-          />
-        </View>
-        {passwordError && <Text style={styles.validNameError}>{passwordError}</Text>}
-      </View>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            handleSignUp();
-          }}
-        >
-          <Text style={styles.buttonText}>Sign up</Text>
-        </TouchableOpacity>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
   inputWrapper: {
     width: rem(300),
@@ -157,8 +168,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     display: "flex",
-
     backgroundColor: "#FFFBE4",
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
+    justifyContent: "center", // Центруємо вміст
   },
   header: {
     fontSize: 64,
@@ -195,17 +209,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   buttonContainer: {
-    backgroundColor: "red",
     display: "flex",
     justifyContent: "center",
     alignItems: "flex-end",
     marginRight: rem(35),
-    marginTop: rem(100),
+    marginTop: rem(100), // Місце, де була кнопка pass у SignIn
   },
   validNameError: {
-    color: 'red',
+    color: "red",
     fontSize: 14,
     marginTop: rem(10),
-    textAlign: 'center',
-  }
+    textAlign: "center",
+  },
 });
