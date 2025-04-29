@@ -9,7 +9,9 @@ import { Home } from "@/screens/MainFlow/Home";
 import { ListUsers } from "@/screens/ListUsers";
 import { User } from "@/types/User";
 import { EditProfile } from "@/screens/EditProfile";
-
+import { Announcement } from "@/screens/MainFlow/Announcement";
+import { Announcement as AnnouncementType } from "@/types/Announcement";
+import AddAnnouncement from "@/screens/MainFlow/AddAnouncement";
 export type AuthStackParamList = {
   Authorization: undefined;
   SignIn: undefined;
@@ -17,6 +19,8 @@ export type AuthStackParamList = {
   Home: undefined;
   ListUsers: { followers: User[] };
   EditProfile: undefined;
+  Announcement: { announcement: AnnouncementType };
+  AddAnnouncement: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -53,6 +57,16 @@ export function AuthNavigator() {
         options={screenOptions}
         name="EditProfile"
         component={EditProfile}
+      />
+      <AuthStack.Screen
+        options={screenOptions}
+        name="Announcement"
+        component={Announcement}
+      />
+      <AuthStack.Screen
+        options={screenOptions}
+        name="AddAnnouncement"
+        component={AddAnnouncement}
       />
     </AuthStack.Navigator>
   );

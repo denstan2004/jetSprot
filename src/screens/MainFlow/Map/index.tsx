@@ -9,9 +9,13 @@ import { Marker as MarkerType } from "@/types/Marker";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { getAnnouncementById } from "@/API/announcement/getAnnouncementById";
+import { Announcement as AnnouncementType } from "@/types/Announcement";
 
 type RootStackParamList = {
   Publication: { id: number };
+  Announcement: { announcement: AnnouncementType };
+  AddAnnouncement: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -21,6 +25,22 @@ export const Map = () => {
   const [markers, setMarkers] = useState<MarkerType[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState<MarkerType | null>(null);
+  const [announcement, setAnnouncement] = useState<AnnouncementType | null>(
+    null
+  );
+  const [mapKey, setMapKey] = useState(0);
+
+  const updateMapKey = () => {
+    setMapKey((prev) => prev + 1);
+  };
+
+  useEffect(() => {
+    if (selectedMarker) {
+      getAnnouncementById(selectedMarker.announcement).then((announcement) => {
+        setAnnouncement(announcement);
+      });
+    }
+  }, [selectedMarker]);
 
   const handleMarkerPress = (marker: MarkerType) => {
     setSelectedMarker(marker);
@@ -32,17 +52,17 @@ export const Map = () => {
     setSelectedMarker(null);
   };
 
-  const handleNavigateToPublication = () => {
-    if (selectedMarker) {
-      navigation.navigate("Publication", { id: selectedMarker.announcement });
+  const handleAnnouncementNavigate = () => {
+    if (announcement) {
+      navigation.navigate("Announcement", { announcement });
       closeModal();
     }
   };
-
   useEffect(() => {
     const fetchMarkers = async () => {
       const response = await getAllMarkers();
       setMarkers(response.results);
+      updateMapKey();
     };
     fetchMarkers();
   }, []);
@@ -54,6 +74,7 @@ export const Map = () => {
   return (
     <>
       <MapView
+        key={`map-${markers.length}-${mapKey}`}
         style={styles.map}
         initialRegion={{
           latitude: 50.450001,
@@ -76,6 +97,15 @@ export const Map = () => {
         ))}
       </MapView>
 
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => {
+          navigation.navigate("AddAnnouncement");
+        }}
+      >
+        <Ionicons name="add" size={24} color="#AC591A" />
+      </TouchableOpacity>
+
       <Modal
         transparent
         visible={modalVisible}
@@ -86,7 +116,7 @@ export const Map = () => {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <TouchableOpacity
-                onPress={handleNavigateToPublication}
+                onPress={handleAnnouncementNavigate}
                 style={styles.navigationButton}
               >
                 <Ionicons name="open-outline" size={24} color="#AC591A" />
@@ -199,5 +229,22 @@ const styles = StyleSheet.create({
   dates: {
     fontSize: 14,
     color: "#666",
+  },
+  addButton: {
+    zIndex: 10000,
+    position: "absolute",
+    top: 50,
+    right: 10,
+    backgroundColor: "white",
+    width: 70,
+    height: 70,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
