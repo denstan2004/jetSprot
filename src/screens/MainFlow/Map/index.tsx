@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { getAllMarkers } from "@/API/announcement/markers/getAllMarkers";
 import { Marker as MarkerType } from "@/types/Marker";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { getAnnouncementById } from "@/API/announcement/getAnnouncementById";
 import { Announcement as AnnouncementType } from "@/types/Announcement";
@@ -58,14 +58,17 @@ export const Map = () => {
       closeModal();
     }
   };
-  useEffect(() => {
-    const fetchMarkers = async () => {
-      const response = await getAllMarkers();
-      setMarkers(response.results);
-      updateMapKey();
-    };
-    fetchMarkers();
-  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchMarkers = async () => {
+        const response = await getAllMarkers();
+        setMarkers(response.results);
+        updateMapKey();
+      };
+      fetchMarkers();
+    }, [])
+  );
 
   useEffect(() => {
     console.log("markers", markers);

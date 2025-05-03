@@ -4,7 +4,7 @@ import { SignUp } from "../AuthFlow/SignUp";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Map } from "./Map";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Chat } from "./Chat/Chat";
+import { ChatsList } from "./Chat/ChatsList";
 import AllPublication from "../AllPublication";
 
 export const Home = () => {
@@ -22,7 +22,6 @@ export const Home = () => {
         tabBarInactiveTintColor: "#FFFBE4",
       }}
       initialRouteName="UserPage"
-
     >
       <Tab.Screen
         name="UserPage"
@@ -37,7 +36,7 @@ export const Home = () => {
           ),
         }}
       />
-          <Tab.Screen
+      <Tab.Screen
         options={{
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
@@ -49,9 +48,9 @@ export const Home = () => {
           ),
         }}
         name="Chat"
-        component={Chat}
+        component={ChatsList}
       />
-       <Tab.Screen
+      <Tab.Screen
         name="Publication"
         component={AllPublication}
         options={{

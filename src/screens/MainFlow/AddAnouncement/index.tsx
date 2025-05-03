@@ -23,8 +23,6 @@ import { deleteAnnouncement } from "@/API/announcement/deleteAnnouncement";
 import { getSports, SportInterface } from "@/API/sport/getSports";
 // import { createMarker } from "@/API/announcement/markers/createMarker";
 
-
-
 const AddAnnouncement = () => {
   const [sports, setSports] = useState<SportInterface[]>([]);
   const navigation = useNavigation();
@@ -50,6 +48,7 @@ const AddAnnouncement = () => {
     );
   };
   useEffect(() => {
+    console.log("selectedSports", selectedSports);
     getSports().then((res) => {
       setSports(res);
     });
@@ -59,12 +58,11 @@ const AddAnnouncement = () => {
     try {
       if (sel && sel.accessToken && sel.userData?.id) {
         const announcementData: CreateAnnouncementData = {
-          sports: selectedSports.map((id) => id.toString()),
+          sport_ids: selectedSports,
           caption,
           description,
           valid_until: validUntil.toISOString(),
           required_amount: parseInt(requiredAmount),
-          creator: sel?.userData?.id,
           status: 1,
         };
         const response = await createAnnouncement(
@@ -179,7 +177,8 @@ const AddAnnouncement = () => {
                 <Text
                   style={[
                     styles.sportText,
-                    selectedSports.includes(sport.id) && styles.selectedSportText,
+                    selectedSports.includes(sport.id) &&
+                      styles.selectedSportText,
                   ]}
                 >
                   {sport.name}
