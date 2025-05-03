@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -20,25 +20,18 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
 import { CreateAnnouncementData } from "@/API/announcement/createAnnouncement";
 import { deleteAnnouncement } from "@/API/announcement/deleteAnnouncement";
+import { getSports, SportInterface } from "@/API/sport/getSports";
 // import { createMarker } from "@/API/announcement/markers/createMarker";
 
-const SPORTS = [
-  "Football",
-  "Basketball",
-  "Tennis",
-  "Volleyball",
-  "Swimming",
-  "Running",
-  "Cycling",
-  "Yoga",
-];
+
 
 const AddAnnouncement = () => {
+  const [sports, setSports] = useState<SportInterface[]>([]);
   const navigation = useNavigation();
   const [caption, setCaption] = useState("");
   const [description, setDescription] = useState("");
   const [requiredAmount, setRequiredAmount] = useState("");
-  const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [selectedSports, setSelectedSports] = useState<number[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [validUntil, setValidUntil] = useState(new Date());
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -51,17 +44,22 @@ const AddAnnouncement = () => {
     city: "",
   });
 
-  const handleSportSelect = (sport: string) => {
+  const handleSportSelect = (sport: number) => {
     setSelectedSports((prev) =>
       prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
     );
   };
+  useEffect(() => {
+    getSports().then((res) => {
+      setSports(res);
+    });
+  }, []);
 
   const handleSubmit = async () => {
     try {
       if (sel && sel.accessToken && sel.userData?.id) {
         const announcementData: CreateAnnouncementData = {
-          sports: selectedSports,
+          sports: selectedSports.map((id) => id.toString()),
           caption,
           description,
           valid_until: validUntil.toISOString(),
@@ -169,22 +167,22 @@ const AddAnnouncement = () => {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Sports</Text>
           <View style={styles.sportsContainer}>
-            {SPORTS.map((sport) => (
+            {sports.map((sport) => (
               <TouchableOpacity
-                key={sport}
+                key={sport.id}
                 style={[
                   styles.sportButton,
-                  selectedSports.includes(sport) && styles.selectedSport,
+                  selectedSports.includes(sport.id) && styles.selectedSport,
                 ]}
-                onPress={() => handleSportSelect(sport)}
+                onPress={() => handleSportSelect(sport.id)}
               >
                 <Text
                   style={[
                     styles.sportText,
-                    selectedSports.includes(sport) && styles.selectedSportText,
+                    selectedSports.includes(sport.id) && styles.selectedSportText,
                   ]}
                 >
-                  {sport}
+                  {sport.name}
                 </Text>
               </TouchableOpacity>
             ))}

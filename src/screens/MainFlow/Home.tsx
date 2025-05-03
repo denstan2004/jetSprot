@@ -4,7 +4,9 @@ import { SignUp } from "../AuthFlow/SignUp";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Map } from "./Map";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Chat } from "./Chat/Chat";
 import AllPublication from "../AllPublication";
+
 export const Home = () => {
   const Tab = createBottomTabNavigator();
   return (
@@ -35,8 +37,21 @@ export const Home = () => {
           ),
         }}
       />
-
-      <Tab.Screen
+          <Tab.Screen
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? "chat" : "chat-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+        name="Chat"
+        component={Chat}
+      />
+       <Tab.Screen
         name="Publication"
         component={AllPublication}
         options={{
@@ -49,7 +64,6 @@ export const Home = () => {
           ),
         }}
       />
-
       <Tab.Screen
         options={{
           headerShown: false,
