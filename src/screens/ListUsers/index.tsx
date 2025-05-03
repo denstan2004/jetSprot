@@ -1,5 +1,5 @@
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { User } from "@/types/User";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/firebase";
@@ -13,7 +13,6 @@ type RootStackParamList = {
 export const ListUsers = () => {
   const route = useRoute<RouteProp<RootStackParamList, "listUsers">>();
   const { followers } = route.params;
-
   const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -24,7 +23,7 @@ export const ListUsers = () => {
           if (user.pfp_url) {
             try {
               const url = await getDownloadURL(ref(storage, user.pfp_url));
-              console.log("Fetched URL:", url);
+              // console.log("Fetched URL:", url);
               urls[user.id] = url;
             } catch (err) {
               console.warn("Error loading image for", err);
@@ -33,7 +32,7 @@ export const ListUsers = () => {
         })
       );
       setPfpUrls(urls);
-      console.log("Profile picture URLs:", urls);
+      // console.log("Profile picture URLs:", urls);
     };
     fetchProfilePictures();
   }, [followers]);

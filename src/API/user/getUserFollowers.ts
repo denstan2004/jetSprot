@@ -2,7 +2,7 @@ import { User } from "@/types/User";
 import axios from "axios";
 import { apiUrl } from "../apiUrl";
 
-export const getUserFollowers = async (userId: number) => {
+const getUserFollowers = async (userId: number) => {
   try {
     const data = await axios.get<User[]>(`${apiUrl}/user/${userId}/followers/`);
     return data.data;
@@ -11,3 +11,4 @@ export const getUserFollowers = async (userId: number) => {
     return [];
   }
 };
+export default getUserFollowers;

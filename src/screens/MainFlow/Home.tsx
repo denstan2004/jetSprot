@@ -4,6 +4,7 @@ import { SignUp } from "../AuthFlow/SignUp";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Map } from "./Map";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import AllPublication from "../AllPublication";
 export const Home = () => {
   const Tab = createBottomTabNavigator();
   return (
@@ -19,6 +20,7 @@ export const Home = () => {
         tabBarInactiveTintColor: "#FFFBE4",
       }}
       initialRouteName="UserPage"
+
     >
       <Tab.Screen
         name="UserPage"
@@ -33,6 +35,21 @@ export const Home = () => {
           ),
         }}
       />
+
+      <Tab.Screen
+        name="Publication"
+        component={AllPublication}
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? "card-search" : "card-search-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+
       <Tab.Screen
         options={{
           headerShown: false,

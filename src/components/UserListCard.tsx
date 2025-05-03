@@ -1,4 +1,7 @@
-import { View, Text, Image, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 
 interface UserCardProps {
   username: string;
@@ -17,9 +20,14 @@ const UserCard = ({
   pfpUrl,
   userId,
 }: UserCardProps) => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+
   return (
     <View style={styles.card}>
-      <Image source={{ uri: pfpUrl }} style={styles.profileImage} />
+      <TouchableOpacity onPress={() => navigation.navigate("User", { userId })}>
+        <Image source={{ uri: pfpUrl }} style={styles.profileImage} />
+      </TouchableOpacity>
       <View style={styles.textContainer}>
         <Text style={styles.username}>{username}</Text>
         <Text style={styles.name}>

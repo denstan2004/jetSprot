@@ -36,7 +36,7 @@ const userSlice = createSlice({
       state.accessToken = '';
       state.refreshToken = '';
       state.userData = null;
-    }
+    },
   },
 });
 export const { setUser, updateUser, logout} = userSlice.actions;

@@ -8,7 +8,7 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-
+src/Api/apiUrl.ts
 # Native
 *.orig.*
 *.jks

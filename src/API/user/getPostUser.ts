@@ -9,14 +9,14 @@ interface MarkerRequestInterface {
   results: Post[];
 }
 
-export const getPostUser = async (userId: string) => {
+export const getUserPosts = async (userId: string) => {
   try {
-    const response = await axios.get<Post>(
+    const response = await axios.get<Post[]>(
       `${apiUrl}/user/${userId}/publications/`
     );
-    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching user posts:", error);
+    return [];
   }
 };

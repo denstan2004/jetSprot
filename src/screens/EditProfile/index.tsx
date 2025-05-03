@@ -23,7 +23,6 @@ import { apiUrl } from "@/API/apiUrl";
 export const EditProfile = () => {
   const user = useSelector((state: RootState) => state.user.userData);
   const token = useSelector((state: RootState) => state.user.accessToken);
-  const state = useSelector((state: RootState) => state);
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
 
@@ -53,7 +52,6 @@ export const EditProfile = () => {
       fetchUserData();
     }
   }, [user?.id, token]);
-
 
   const handleSave = async () => {
     try {

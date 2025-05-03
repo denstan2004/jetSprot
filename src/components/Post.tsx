@@ -19,8 +19,13 @@ import { storage } from "@/firebase";
 import { getDownloadURL, ref } from "firebase/storage";
 import { ResizeMode, Video } from "expo-av";
 import { apiUrl } from "@/API/apiUrl";
+import deletePublication from "@/API/publication/deletePublication";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 
 interface PostProps {
+  // onDelete: (id: number) => void;
   post: PostInterface;
 }
 // зробити карточку коментаря в кожному коментарі зробити забит по юзера звідти треба юзернейм і пфп піктуре ==> на фаєрбейз дістав зображення і вдобразив
@@ -29,6 +34,8 @@ const Post = ({ post }: PostProps) => {
   const sel = useSelector((state: RootState) => state.user.userData);
   const acces = useSelector((state: RootState) => state.user.accessToken);
   const [isLiked, setIsLiked] = useState(post.is_liked);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 
   // const [author, setAuthor] = useState<User | null>(null);
   useEffect(() => {}, [post]);
@@ -36,6 +43,10 @@ const Post = ({ post }: PostProps) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
+
+  const handleProfilePress = () => {
+    navigation.navigate("User", { userId: post.creator.toString() });
+  };
 
   const openModal = async () => {
     setModalVisible(true);
@@ -71,27 +82,19 @@ const Post = ({ post }: PostProps) => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(
-        `${apiUrl}/user/${sel?.id}/publications/`
-      );
-      const publications = response.data.data || [];
-      // console.log("Publications:", publications);
-      const currentPost = publications.find((pub: any) => pub.id === post.id);
-      if (currentPost && currentPost.comments) {
-        setComments(currentPost.comments);
-      } else {
-        setComments([]);
-      }
+      const response = await axios.get(`${apiUrl}/comment/`);
+      setComments(response.data || []);
     } catch (error) {
       console.error("Error fetching comments:", error);
+      setComments([]);
     }
   };
 
   const addComment = async () => {
-    if (newComment.trim()) {
+    if (newComment.trim() && acces) {
       try {
-        const response = await axios.patch(
-          `${apiUrl}/comment/${sel?.id}/`,
+        const response = await axios.post(
+          `${apiUrl}/comment/${post.id}/`,
           { content: newComment },
           {
             headers: {
@@ -99,11 +102,9 @@ const Post = ({ post }: PostProps) => {
             },
           }
         );
-        console.log("Comment added:", response.data);
 
         if (response.data) {
-          const updatedComment = response.data;
-          setComments([...comments, updatedComment]);
+          setComments([...comments, response.data]);
           setNewComment("");
         }
       } catch (error) {
@@ -112,14 +113,39 @@ const Post = ({ post }: PostProps) => {
     }
   };
 
+  // const handleDelete = async () => {
+  //   try {
+  //     console.log(post.creator);
+  //     console.log(sel?.id);
+  //     const id = post.id.toString();
+  //     const response = await deletePublication(
+  //       id,
+  //       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2MDMwNzY4LCJpYXQiOjE3NDU5NDQzNjgsImp0aSI6ImU5N2M3ZjU5NTE5YTQ4ZTdiYWZkMTZlNDA0YTRkMzc1IiwidXNlcl9pZCI6MX0.Cr1dH_iyTAZmnkUuP0p6LqI7x__KAXCa5W1-ZghXnVA"
+  //     );
+  //     // console.log(response);
+  //     if (response.status === 204) {
+  //       console.log("Post deleted");
+  //       onDelete(post.id);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
   return (
     <View key={post.id} style={styles.postCard}>
       <View style={styles.header}>
-        <Image source={{ uri: mediaUrl || "" }} style={styles.profileImage} />
+        <TouchableOpacity onPress={handleProfilePress}>
+          <Image source={{ uri: mediaUrl || "" }} style={styles.profileImage} />
+        </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.username}>{post.creator_username}</Text>
         </View>
       </View>
+      {/* 
+      <TouchableOpacity onPress={handleDelete}>
+        <Text>Delete</Text>
+      </TouchableOpacity> */}
 
       <Text style={styles.caption}>{post.caption}</Text>
       <Text style={styles.description}>{post.description}</Text>
@@ -188,14 +214,16 @@ const Post = ({ post }: PostProps) => {
                 comments.map((comment, index) => (
                   <View key={index} style={styles.commentCard}>
                     <View style={styles.commentContent}>
-                      <Image
-                        source={{ uri: mediaUrl || "" }}
-                        style={styles.commentAvatar}
-                      />
+                      <TouchableOpacity onPress={handleProfilePress}>
+                        <Image
+                          source={{ uri: mediaUrl || "" }}
+                          style={styles.commentAvatar}
+                        />
+                      </TouchableOpacity>
 
                       <View style={styles.commentTextContainer}>
                         <Text style={styles.commentUsername}>
-                          {comment.author_username || "Unknown"}
+                          {comment.author_username}
                         </Text>
 
                         <Text style={styles.commentText}>
