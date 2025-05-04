@@ -9,9 +9,12 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ImageBackground,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { wsUrl as wsUrlApi } from "@/API/apiUrl";
+import { RouteProp, useRoute } from "@react-navigation/native";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 
 interface ChatMessage {
   _id: string;
@@ -23,8 +26,13 @@ interface ChatMessage {
   };
 }
 
-const ChatScreen = () => {
-  const { userId, userName } = { userId: 1, userName: "John Doe" };
+type ChatScreenRouteProp = RouteProp<AuthStackParamList, "UserChat">;
+
+export const ChatScreen = () => {
+  const route = useRoute<ChatScreenRouteProp>();
+  const { userId, userName } = route.params;
+  console.log("userId", userId);
+  console.log("userName", userName);
   const { accessToken } = useSelector((state: RootState) => state.user);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -32,11 +40,11 @@ const ChatScreen = () => {
   const [newMessage, setNewMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
-  const wsUrl = `${wsUrlApi}/chat/1/?token=${accessToken}`;
+  const wsUrl = `${wsUrlApi}/chat/${userId}/?token=${accessToken}`;
 
   const connectWebSocket = useCallback(() => {
     const socket = new WebSocket(wsUrl);
-
+    console.log("connecting to", socket);
     socket.onopen = () => {
       setIsConnected(true);
       console.log("WebSocket Connected");
@@ -147,45 +155,57 @@ const ChatScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    <ImageBackground
+      source={require("../../../assets/Basketball2.png")}
+      style={{ flex: 1 }}
+      resizeMode="cover"
     >
-      <View style={styles.messagesContainer}>
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item._id}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholder="Type a message..."
-          multiline
-        />
-        <TouchableOpacity
-          style={styles.sendButton}
-          onPress={sendMessage}
-          disabled={!newMessage.trim()}
+      <View style={{ flex: 1, backgroundColor: "#FFFBE4AA" }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.messagesContainer}>
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={(item) => item._id}
+              onContentSizeChange={() =>
+                flatListRef.current?.scrollToEnd({ animated: true })
+              }
+              onLayout={() =>
+                flatListRef.current?.scrollToEnd({ animated: true })
+              }
+            />
+          </View>
 
-      <View style={styles.connectionStatus}>
-        <Text style={styles.connectionStatusText}>
-          {isConnected ? "Connected" : "Disconnected"}
-        </Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={newMessage}
+              onChangeText={setNewMessage}
+              placeholder="Type a message..."
+              multiline
+            />
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={sendMessage}
+              disabled={!newMessage.trim()}
+            >
+              <Text style={styles.sendButtonText}>Send</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.connectionStatus}>
+            <Text style={styles.connectionStatusText}>
+              {isConnected ? "Connected" : "Disconnected"}
+            </Text>
+          </View>
+        </KeyboardAvoidingView>
       </View>
-    </KeyboardAvoidingView>
+    </ImageBackground>
   );
 };
 
@@ -228,6 +248,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#ddd",
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   input: {
     flex: 1,
@@ -252,11 +275,13 @@ const styles = StyleSheet.create({
   connectionStatus: {
     padding: 5,
     alignItems: "center",
+    position: "absolute",
+    bottom: 55,
+    left: 0,
+    right: 0,
   },
   connectionStatusText: {
     fontSize: 12,
     color: "#666",
   },
 });
-
-export default ChatScreen;

@@ -14,7 +14,8 @@ import { Announcement as AnnouncementType } from "@/types/Announcement";
 import AddAnnouncement from "@/screens/MainFlow/AddAnouncement";
 import { CreatePost } from "@/screens/MainFlow/CreatePost";
 import { UserPage } from "@/screens/MainFlow/User";
-import ChatScreen from "@/screens/MainFlow/Chat/Chat";
+import { ChatScreen } from "@/screens/MainFlow/Chat/Chat";
+
 export type AuthStackParamList = {
   Authorization: undefined;
   SignIn: undefined;
@@ -26,7 +27,7 @@ export type AuthStackParamList = {
   AddAnnouncement: undefined;
   CreatePost: undefined;
   User: { userId: string };
-  UserChat: undefined;
+  UserChat: { userId: number; userName: string };
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();

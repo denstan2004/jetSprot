@@ -33,9 +33,8 @@ export const ChatsList = () => {
   useEffect(() => {
     const fetchChats = async () => {
       const chats = await getAllChats(token);
+      console.log(chats);
       setChats(chats);
-      chats[0].unread_count++;
-      // Fetch profile pictures for all users in chats
       const urls: Record<string, string> = {};
       for (const chat of chats) {
         for (const user of chat.users) {
@@ -66,13 +65,20 @@ export const ChatsList = () => {
       <ScrollView style={styles.chatList}>
         {chats.map((chat) => {
           const otherUser = getOtherUser(chat);
+          console.log(otherUser);
           if (!otherUser) return null;
 
           return (
             <TouchableOpacity
               key={chat.id}
               style={styles.chatItem}
-              onPress={() => navigation.navigate("UserChat")}
+              onPress={() =>
+                navigation.navigate("UserChat", {
+                  userId: otherUser.id,
+                  userName: otherUser.username,
+                  // userPfpUrl: pfpUrls[otherUser.id],
+                })
+              }
             >
               <Image
                 source={{ uri: pfpUrls[otherUser.id] }}

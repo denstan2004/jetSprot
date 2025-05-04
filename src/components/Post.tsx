@@ -23,7 +23,9 @@ import deletePublication from "@/API/publication/deletePublication";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
-
+import { Comment } from "@/types/Comments";
+import getComments from "@/API/comments/getComments";
+import addComments from "@/API/comments/addComments";
 interface PostProps {
   // onDelete: (id: number) => void;
   post: PostInterface;
@@ -32,7 +34,7 @@ interface PostProps {
 //press modal, зробив запит на бек, дістати всі коментарі по посту, закинув їх в юзстейт, якщо додаєш коментарій то робиш запит якщо запит повернув ок то додаєш власний комент в юз стейт після цього як закрив модалку очистив стейт
 const Post = ({ post }: PostProps) => {
   const sel = useSelector((state: RootState) => state.user.userData);
-  const acces = useSelector((state: RootState) => state.user.accessToken);
+  const access = useSelector((state: RootState) => state.user.accessToken);
   const [isLiked, setIsLiked] = useState(post.is_liked);
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
@@ -41,7 +43,7 @@ const Post = ({ post }: PostProps) => {
   useEffect(() => {}, [post]);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
   const handleProfilePress = () => {
@@ -82,7 +84,7 @@ const Post = ({ post }: PostProps) => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/comment/`);
+      const response = await getComments();
       setComments(response.data || []);
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -91,25 +93,21 @@ const Post = ({ post }: PostProps) => {
   };
 
   const addComment = async () => {
-    if (newComment.trim() && acces) {
-      try {
-        const response = await axios.post(
-          `${apiUrl}/comment/${post.id}/`,
-          { content: newComment },
-          {
-            headers: {
-              Authorization: `Bearer ${acces}`,
-            },
-          }
-        );
+    try {
+      console.log(post.id);
+      console.log(newComment);
+      const response = await addComments(newComment, access, post.id);
+      console.log(response.data);
 
-        if (response.data) {
-          setComments([...comments, response.data]);
-          setNewComment("");
+      setComments((prevComments) => {
+        if (Array.isArray(prevComments)) {
+          return [...prevComments, response.data];
         }
-      } catch (error) {
-        console.error("Error adding comment:", error);
-      }
+        return [response.data];
+      });
+      setNewComment("");
+    } catch (error) {
+      console.error("Error adding comment:", error);
     }
   };
 
@@ -208,7 +206,7 @@ const Post = ({ post }: PostProps) => {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              {comments.length === 0 ? (
+              {comments.length === 0 || comments.length === undefined ? (
                 <Text style={styles.noComments}>No comments yet...</Text>
               ) : (
                 comments.map((comment, index) => (
