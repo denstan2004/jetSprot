@@ -30,7 +30,7 @@ type ChatScreenRouteProp = RouteProp<AuthStackParamList, "UserChat">;
 
 export const ChatScreen = () => {
   const route = useRoute<ChatScreenRouteProp>();
-  const { userId, userName } = route.params;
+  const { chatId, userId, userName } = route.params;
   console.log("userId", userId);
   console.log("userName", userName);
   const { accessToken } = useSelector((state: RootState) => state.user);
@@ -40,7 +40,7 @@ export const ChatScreen = () => {
   const [newMessage, setNewMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
-  const wsUrl = `${wsUrlApi}/chat/${userId}/?token=${accessToken}`;
+  const wsUrl = `${wsUrlApi}/chat/${chatId}/?token=${accessToken}`;
 
   const connectWebSocket = useCallback(() => {
     const socket = new WebSocket(wsUrl);
@@ -59,15 +59,16 @@ export const ChatScreen = () => {
       const data = JSON.parse(event.data);
 
       if (data.type === "chat_message") {
+        console.log("data", data);
         setMessages((prevMessages) => [
           ...prevMessages,
           {
-            _id: data._id,
-            text: data.text,
-            createdAt: new Date(data.createdAt),
+            _id: data.message._id,
+            text: data.message.text,
+            createdAt: new Date(data.message.createdAt),
             user: {
-              _id: data.user._id,
-              name: data.user.name,
+              _id: data.message.user._id,
+              name: data.message.user.name,
             },
           },
         ]);
@@ -81,7 +82,7 @@ export const ChatScreen = () => {
             name: msg.user.name,
           },
         }));
-        setMessages(loadedMessages);
+        setMessages(loadedMessages.reverse());
       }
     };
 
@@ -96,18 +97,19 @@ export const ChatScreen = () => {
         })
       );
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          _id: Date.now().toString(),
-          text: newMessage.trim(),
-          createdAt: new Date(),
-          user: {
-            _id: userId.toString(),
-            name: userName,
-          },
-        },
-      ]);
+      //   setMessages((prevMessages) => [
+      //     ...prevMessages,
+      //     {
+      //       _id: Date.now().toString(),
+      //       text: newMessage.trim(),
+      //       createdAt: new Date(),
+      //       user: {
+      //         _id: userId.toString(),
+      //         name: userName,
+      //       },
+      //     },
+      //   ]
+      // );
 
       setNewMessage("");
     }
@@ -133,7 +135,7 @@ export const ChatScreen = () => {
   }, [connectWebSocket]);
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
-    const isMyMessage = item.user._id === userId.toString();
+    const isMyMessage = item.user._id !== userId.toString();
 
     return (
       <TouchableOpacity

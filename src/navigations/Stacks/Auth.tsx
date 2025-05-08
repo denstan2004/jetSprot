@@ -27,7 +27,7 @@ export type AuthStackParamList = {
   AddAnnouncement: undefined;
   CreatePost: undefined;
   User: { userId: string };
-  UserChat: { userId: number; userName: string };
+  UserChat: { chatId: number; userId: number; userName: string };
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();

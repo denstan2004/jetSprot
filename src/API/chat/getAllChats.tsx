@@ -10,7 +10,7 @@ interface ChatResponseInterface {
 export interface ChatInterface {
   id: number;
   name: string;
-  users: [
+  members: [
     {
       id: number;
       username: string;
@@ -24,6 +24,7 @@ export interface ChatInterface {
     content: string;
     timestamp: string;
   };
+  is_group: boolean;
   unread_count: number;
 }
 

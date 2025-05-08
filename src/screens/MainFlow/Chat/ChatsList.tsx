@@ -37,7 +37,7 @@ export const ChatsList = () => {
       setChats(chats);
       const urls: Record<string, string> = {};
       for (const chat of chats) {
-        for (const user of chat.users) {
+        for (const user of chat.members) {
           if (user.pfp_url && user.id !== currentUserId) {
             try {
               const url = await getDownloadURL(ref(storage, user.pfp_url));
@@ -54,7 +54,7 @@ export const ChatsList = () => {
   }, [currentUserId]);
 
   const getOtherUser = (chat: ChatInterface) => {
-    return chat.users.find((user) => user.id !== currentUserId);
+    return chat.members.find((user) => user.id !== currentUserId);
   };
 
   return (
@@ -74,9 +74,9 @@ export const ChatsList = () => {
               style={styles.chatItem}
               onPress={() =>
                 navigation.navigate("UserChat", {
+                  chatId: chat.id,
                   userId: otherUser.id,
                   userName: otherUser.username,
-                  // userPfpUrl: pfpUrls[otherUser.id],
                 })
               }
             >
