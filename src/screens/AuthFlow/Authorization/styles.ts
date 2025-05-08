@@ -13,7 +13,7 @@ export const useStyles = () =>
 
         alignItems:"center",
         height:"100%",
-        backgroundColor:"#4E3A1B"
+        backgroundColor:"#a3481c"
     },
     icon:{
       position:"absolute",
@@ -72,7 +72,8 @@ export const useStyles = () =>
       justifyContent:"center",
       alignItems:"center",
       width:rem(288),
-      backgroundColor:"#AC591A",
+      backgroundColor:"#FFFBE4",
+      borderColor:"#AC591A",
       margin:rem(8),
       height:rem(50),
       borderRadius:rem(25),
@@ -85,12 +86,13 @@ export const useStyles = () =>
       alignItems:"center",
       width:rem(288),
       margin:rem(8),
-      backgroundColor:"#AC591A",
+      backgroundColor:"#FFFBE4",
+      borderColor:"#AC591A",
       height:rem(50),
       borderRadius:rem(25),
     },
     buttonText:{
-      color:"white",
+      color:"#AC591A",
       fontSize:rem(16),
       fontWeight:"bold",
     }

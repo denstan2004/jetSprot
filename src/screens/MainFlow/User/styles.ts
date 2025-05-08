@@ -3,18 +3,16 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#AC591A",
+    backgroundColor: "#803511",
   },
 
   headerBackground: {
     paddingHorizontal: 10,
-    marginTop: 30,
   },
 
   headerTopRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: -40,
   },
 
   iconGroup: {
@@ -30,14 +28,13 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
   },
 
   profileImage: {
     width: 70,
     height: 70,
     borderRadius: 40,
-    backgroundColor: "#AC591A",
+    backgroundColor: "#FFFBE4",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -82,7 +79,7 @@ export const styles = StyleSheet.create({
   username: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#000",
+    color: "#FFFBE4",
     marginBottom: 4,
   },
 
@@ -152,5 +149,59 @@ export const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
     lineHeight: 20,
+  },
+
+  additionalInfo: {
+    backgroundColor: "#803511",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: "hidden",
+  },
+
+  statusText: {
+    flex:1,
+    color: "#FFFBE4",
+    fontSize: 16,
+    marginBottom: 15,
+    textAlign: "center",
+  },
+
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    gap: 10,
+  },
+
+  followButton: {
+    backgroundColor: "#FFFBE4",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    flex: 1,
+    alignItems: "center",
+  },
+
+  messageButton: {
+    backgroundColor: "#FFFBE4",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    flex: 1,
+    alignItems: "center",
+  },
+
+  buttonText: {
+    color: "#803511",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  profileBodyBackground: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: "#FFFBE4",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
 });

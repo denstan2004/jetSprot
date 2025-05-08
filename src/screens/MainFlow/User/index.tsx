@@ -8,6 +8,7 @@ import {
   Modal,
   ScrollView,
   Image,
+  Animated,
 } from "react-native";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { styles } from "./styles";
@@ -51,6 +52,8 @@ export const UserPage = () => {
   const [posts, setPosts] = useState<PostInterface[]>([]);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showDopInfo, setShowDopInfo] = useState(false);
+  const [animation] = useState(new Animated.Value(0));
 
   const handleNavigateToFolowers = () => {
     navigation.navigate("ListUsers", { followers });
@@ -86,8 +89,10 @@ export const UserPage = () => {
   };
 
   const hasMissingInfo = () => {
-    return !sel?.birth_date || !sel?.first_name || !sel.last_name || !sel?.username
-  }
+    return (
+      !sel?.birth_date || !sel?.first_name || !sel.last_name || !sel?.username
+    );
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -125,7 +130,7 @@ export const UserPage = () => {
           const response = await getPostUserApi(userId);
           setPosts(response || []);
         } catch (error) {
-          console.error("Error fetching posts:", error);        
+          console.error("Error fetching posts:", error);
         }
       }
     };
@@ -151,33 +156,60 @@ export const UserPage = () => {
     fetchPfpUrl();
   }, [currentUser]);
 
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: showDopInfo ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [showDopInfo]);
+
+  const profileBodyStyle = {
+    transform: [
+      {
+        translateY: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 75], // Adjust this value based on your needs
+        }),
+      },
+    ],
+  };
+
+  const additionalInfoStyle = {
+    opacity: animation,
+    height: animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 75], // Should match the translateY value above
+    }),
+  };
+
   const closeModal = () => {
     setModalVisible(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerBackground}>
-        <View style={styles.headerTopRow}>
-          <View style={styles.iconGroup}>
-            <TouchableOpacity style={styles.icon}>
-              <Ionicons name="heart-outline" size={24} color="white" />
+      <View style={styles.headerTopRow}>
+        <View style={styles.iconGroup}>
+          <TouchableOpacity style={styles.icon}>
+            <Ionicons name="heart-outline" size={24} color="white" />
+          </TouchableOpacity>
+          {userId === sel?.id.toString() && (
+            <TouchableOpacity
+              onPress={handleNavigateToEditProfile}
+              style={styles.icon}
+            >
+              <MaterialIcons name="edit" size={24} color="white" />
             </TouchableOpacity>
-            {userId === sel?.id.toString() && (
-              <TouchableOpacity
-                onPress={handleNavigateToEditProfile}
-                style={styles.icon}
-              >
-                <MaterialIcons name="edit" size={24} color="white" />
-              </TouchableOpacity>
-            )}
-          </View>
+          )}
         </View>
-
+      </View>
+      <View style={styles.headerBackground}>
         {hasMissingInfo() && (
           <View style={styles.warningContainer}>
             <Text style={styles.warningText}>
-              Please complete your profile by adding your first name, last name, birth date and username.
+              Please complete your profile by adding your first name, last name,
+              birth date and username.
             </Text>
           </View>
         )}
@@ -187,64 +219,131 @@ export const UserPage = () => {
             <Text style={styles.username}>
               {firstName} {lastName}
             </Text>
+
             <View style={styles.avatarContainer}>
-              <Image
-                source={{ uri: mediaUrl || "" }}
-                style={styles.profileImage}
-              />
-              {userId === sel?.id.toString() && (
-                <TouchableOpacity
-                  onPress={handleNavigateToEditProfile}
-                  style={styles.addIconContainer}
-                >
+              <TouchableOpacity
+                onPress={handleNavigateToEditProfile}
+                // style={styles.addIconContainer}
+              >
+                <Image
+                  source={{ uri: mediaUrl || "" }}
+                  style={styles.profileImage}
+                />
+                {/* {userId === sel?.id.toString() && (
                   <Text style={styles.addIcon}>+</Text>
-                </TouchableOpacity>
-              )}
+                )} */}
+              </TouchableOpacity>
             </View>
-            <Text style={styles.role}>basketball/football player</Text>
           </View>
 
           <View style={styles.rightSide}>
             <View style={styles.statsRow}>
               <TouchableOpacity onPress={handleNavigateToFolowers}>
                 <View style={styles.statsItem}>
-                  <Text style={{ color: "white" }}>{followers.length}</Text>
-                  <Text style={{ color: "white" }}>Followers</Text>
+                  <Text
+                    style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+                  >
+                    {followers.length}
+                  </Text>
+                  <Text style={{ color: "white", fontSize: 16 }}>
+                    Followers
+                  </Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleNavigateToFollows}>
                 <View style={styles.statsItem}>
-                  <Text style={{ color: "white" }}>{follows.length}</Text>
-                  <Text style={{ color: "white" }}>Follows</Text>
+                  <Text
+                    style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+                  >
+                    {follows.length}
+                  </Text>
+                  <Text style={{ color: "white", fontSize: 16 }}>Follows</Text>
                 </View>
               </TouchableOpacity>
             </View>
           </View>
         </View>
+
+        <Animated.View style={[styles.additionalInfo, additionalInfoStyle]}>
+          <Text style={styles.statusText}>
+            {currentUser?.status || "No status"}
+          </Text>
+          {userId !== sel?.id.toString() && (
+            <View style={styles.actionButtons}>
+              <TouchableOpacity style={styles.followButton}>
+                <Text style={styles.buttonText}>Follow</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.messageButton}>
+                <Text style={styles.buttonText}>Message</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </Animated.View>
       </View>
 
-      <ImageBackground
-        source={require("../../../assets/Basketball2.png")}
-        style={styles.profileBody}
-        resizeMode="cover"
-      >
-        {userId === sel?.id.toString() && (
-          <TouchableOpacity onPress={() => navigation.navigate("CreatePost")}>
-            <Text>Create Post</Text>
-          </TouchableOpacity>
-        )}
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 10 }}
+      <Animated.View style={[styles.profileBody, profileBodyStyle]}>
+        <ImageBackground
+          source={require("../../../assets/Basketball2.png")}
+          style={styles.profileBodyBackground}
+          resizeMode="cover"
         >
-          {posts.map((post, index) => (
-            <View key={index} style={{ marginVertical: 10 }}>
-              <Post post={post} />
-            </View>
-          ))}
-        </ScrollView>
-      </ImageBackground>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <TouchableOpacity onPress={() => setShowDopInfo(!showDopInfo)}>
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  backgroundColor: showDopInfo ? "#803511" : "transparent",
+                  borderRadius: 15,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name={showDopInfo ? "arrow-up" : "arrow-down"}
+                  size={24}
+                  color={showDopInfo ? "white" : "#803511"}
+                />
+              </View>
+            </TouchableOpacity>
+            {userId === sel?.id.toString() && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate("CreatePost")}
+              >
+                <View
+                  style={{
+                    width: 30,
+                    height: 30,
+                    backgroundColor: showDopInfo ? "#803511" : "transparent",
+                    borderRadius: 15,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons
+                    name="add-sharp"
+                    size={24}
+                    color={showDopInfo ? "white" : "#803511"}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ padding: 10 }}
+          >
+            {posts.map((post, index) => (
+              <View key={index} style={{ marginVertical: 10 }}>
+                <Post post={post} />
+              </View>
+            ))}
+          </ScrollView>
+        </ImageBackground>
+      </Animated.View>
     </SafeAreaView>
   );
 };

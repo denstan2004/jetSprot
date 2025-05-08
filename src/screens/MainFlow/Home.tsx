@@ -14,7 +14,7 @@ export const Home = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#AC591A",
+          backgroundColor: "#803511",
           borderTopWidth: 1,
           borderTopColor: "#FFFBE4",
         },
