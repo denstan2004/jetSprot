@@ -2,7 +2,14 @@ import React from "react";
 import { Marker } from "react-native-maps";
 import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Modal, StyleSheet, View, TouchableOpacity, Text } from "react-native";
+import {
+  Modal,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+} from "react-native";
 import { useEffect, useState } from "react";
 import { getAllMarkers } from "@/API/announcement/markers/getAllMarkers";
 import { Marker as MarkerType } from "@/types/Marker";
@@ -11,29 +18,50 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { getAnnouncementById } from "@/API/announcement/getAnnouncementById";
 import { Announcement as AnnouncementType } from "@/types/Announcement";
+import Animated, {
+  Extrapolate,
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { getSports, SportInterface } from "@/API/sport/getSports";
+import { rem } from "@/theme/units";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+//TODO: adding marker as part of this screen
+type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
-type RootStackParamList = {
-  Publication: { id: number };
-  Announcement: { announcement: AnnouncementType };
-  AddAnnouncement: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
 
 export const Map = () => {
   const navigation = useNavigation<NavigationProp>();
   const [markers, setMarkers] = useState<MarkerType[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedSports, setSelectedSports] = useState<number[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<MarkerType | null>(null);
   const [announcement, setAnnouncement] = useState<AnnouncementType | null>(
     null
   );
-  const [mapKey, setMapKey] = useState(0);
+  const [sports, setSports] = useState<SportInterface[]>([]);
 
+  const [mapKey, setMapKey] = useState(0);
+  const menuAnimation = useSharedValue(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { width, height } = Dimensions.get("window");
+  const handleSportSelect = (sport: number) => {
+    setSelectedSports((prev) =>
+      prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
+    );
+  };
   const updateMapKey = () => {
     setMapKey((prev) => prev + 1);
   };
-
+  useEffect(() => {
+    getSports().then((res) => {
+      setSports(res);
+    });
+  }, []);
   useEffect(() => {
     if (selectedMarker) {
       getAnnouncementById(selectedMarker.announcement).then((announcement) => {
@@ -70,10 +98,70 @@ export const Map = () => {
     }, [])
   );
 
-  useEffect(() => {
-    console.log("markers", markers);
-  }, [markers]);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+    menuAnimation.value = withTiming(isMenuOpen ? 0 : 1, {
+      duration: 1000,
+    });
+  };
 
+  const menuStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            menuAnimation.value,
+            [0, 1],
+            [-height, 0],
+            Extrapolate.CLAMP
+          ),
+        },
+      ],
+      backgroundColor: interpolateColor(
+        menuAnimation.value,
+        [0, 0.5, 1],
+        ["#803511", "#803511", "#FFFBE4"]
+      ),
+    };
+  });
+  const menuButtonStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            menuAnimation.value,
+            [0, 1],
+            [0, -320],
+            Extrapolate.CLAMP
+          ),
+        },
+      ],
+      backgroundColor: interpolateColor(
+        menuAnimation.value,
+        [0, 1],
+        ["#FFFBE4", "#803511"]
+      ),
+    };
+  });
+  const menuIconStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: `${interpolate(menuAnimation.value, [0, 1], [0, 180])}deg`,
+        },
+      ],
+      backgroundColor: interpolateColor(
+        menuAnimation.value,
+        [0, 1],
+        ["#FFFBE4", "#803511"]
+      ),
+      color: interpolateColor(
+        menuAnimation.value,
+        [0, 1],
+        ["#803511", "#FFFBE4"]
+      ),
+    };
+  });
   return (
     <>
       <MapView
@@ -99,7 +187,21 @@ export const Map = () => {
           />
         ))}
       </MapView>
-
+      <Animated.View style={[styles.MenuButton, menuButtonStyle]}>
+        <TouchableOpacity
+          onPress={() => {
+            toggleMenu();
+          }}
+        >
+          <Animated.View style={menuIconStyle}>
+            <AnimatedIonicons
+              name={isMenuOpen ? "close" : "menu"}
+              size={24}
+              style={menuIconStyle}
+            />
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => {
@@ -108,6 +210,42 @@ export const Map = () => {
       >
         <Ionicons name="add" size={24} color="#AC591A" />
       </TouchableOpacity>
+      <Animated.View style={[styles.menu, menuStyle]}>
+        <View
+          style={{ flexDirection: "row", gap: rem(10), alignItems: "center" }}
+        >
+          <Text style={styles.viewAll}>VIEW ALL ANNOUNCEMENTS</Text>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("AnouncementList");
+            }}
+          >
+            <Ionicons name="open-outline" size={24} color="#803511" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.sportsTitle}>FILTER BY SPORTS:</Text>
+        <View style={styles.sportsContainer}>
+          {sports.map((sport) => (
+            <TouchableOpacity
+              key={sport.id}
+              style={[
+                styles.sportButton,
+                selectedSports.includes(sport.id) && styles.selectedSport,
+              ]}
+              onPress={() => handleSportSelect(sport.id)}
+            >
+              <Text
+                style={[
+                  styles.sportText,
+                  selectedSports.includes(sport.id) && styles.selectedSportText,
+                ]}
+              >
+                {sport.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Animated.View>
 
       <Modal
         transparent
@@ -192,6 +330,39 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 4,
   },
+  sportsContainer: {
+    marginTop: rem(10),
+    flexDirection: "row",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: rem(8),
+  },
+  sportButton: {
+    paddingHorizontal: rem(12),
+    paddingVertical: rem(6),
+    borderRadius: rem(16),
+    backgroundColor: "white",
+    borderWidth: 3,
+    borderColor: "#803511",
+  },
+  selectedSport: {
+    backgroundColor: "#803511",
+  },
+  sportText: {
+    fontWeight: "bold",
+
+    color: "#803511",
+  },
+  sportsTitle: {
+    marginTop: rem(30),
+    marginLeft: rem(10),
+    fontFamily: "Poppins-Bold",
+    fontWeight: "bold",
+    color: "#803511",
+  },
+  selectedSportText: {
+    color: "white",
+  },
   navigationButton: {
     padding: 4,
   },
@@ -213,17 +384,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 5,
   },
-  sportsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 15,
-  },
   sportItem: {
     backgroundColor: "#E8E8E8",
-    padding: 5,
-    borderRadius: 5,
-    marginRight: 5,
-    marginBottom: 5,
+    padding: rem(5),
+    borderRadius: rem(5),
+    marginRight: rem(5),
+    marginBottom: rem(5),
   },
   noSports: {
     color: "#666",
@@ -249,5 +415,49 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  MenuButton: {
+    zIndex: 10000,
+    position: "absolute",
+    alignSelf: "center",
+    bottom: 10,
+    backgroundColor: "white",
+    width: 50,
+    height: 50,
+    borderRadius: 9999,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+
+  menu: {
+    position: "absolute",
+    zIndex: 1000,
+    paddingTop: rem(20),
+    bottom: 0,
+    left: 0,
+    width: "100%",
+    height: rem(300),
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor: "#FFFBE4",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  viewAll: {
+    marginLeft: rem(10),
+    fontFamily: "Poppins-Bold",
+    fontWeight: "bold",
+    color: "#803511",
   },
 });
