@@ -10,6 +10,9 @@ interface UserCardProps {
   rating: number;
   pfpUrl: string;
   userId: string;
+  onCardPress?: () => void;    
+  onAvatarPress?: () => void;
+  isSelected: boolean;
 }
 
 const UserCard = ({
@@ -19,12 +22,16 @@ const UserCard = ({
   rating,
   pfpUrl,
   userId,
+  onCardPress,
+  onAvatarPress,
+  isSelected,
 }: UserCardProps) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 
   return (
-    <View style={styles.card}>
+
+    <TouchableOpacity style={styles.card} onPress={onCardPress}>
       <TouchableOpacity onPress={() => navigation.navigate("User", { userId })}>
         <Image source={{ uri: pfpUrl }} style={styles.profileImage} />
       </TouchableOpacity>
@@ -35,7 +42,7 @@ const UserCard = ({
         </Text>
         <Text style={styles.rating}>Rating: {rating}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

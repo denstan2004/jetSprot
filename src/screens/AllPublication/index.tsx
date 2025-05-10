@@ -4,9 +4,9 @@ import allPublication from "@/API/publication/allPublication";
 import { useEffect, useState } from "react";
 import { Post as PostInterface } from "@/types/Post";
 import Post from "@/components/Post";
-
 const AllPublication = () => {
   const [posts, setPosts] = useState<PostInterface[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchAllPublication = async () => {
     try {
@@ -20,6 +20,8 @@ const AllPublication = () => {
     } catch (err) {
       console.error("Error fetching publications:", err);
       setPosts([]);
+    } finally {
+      setLoading(false);
     }
   };
 

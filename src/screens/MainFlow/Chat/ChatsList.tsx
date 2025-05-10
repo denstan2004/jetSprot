@@ -61,7 +61,14 @@ export const ChatsList = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Messages</Text>
+        <TouchableOpacity
+          style={styles.plusButton}
+          onPress={() => navigation.navigate("SearchUser")}
+        >
+          <Ionicons name="add" size={24} color="#5B3400" />
+        </TouchableOpacity>
       </View>
+
       <ScrollView style={styles.chatList}>
         {chats.map((chat) => {
           const otherUser = getOtherUser(chat);
@@ -75,8 +82,6 @@ export const ChatsList = () => {
               onPress={() =>
                 navigation.navigate("UserChat", {
                   chatId: chat.id,
-                  userId: otherUser.id,
-                  userName: otherUser.username,
                 })
               }
             >
@@ -85,7 +90,15 @@ export const ChatsList = () => {
                 style={styles.avatar}
               />
               <View style={styles.chatInfo}>
-                <Text style={styles.chatName}>{otherUser.username}</Text>
+                <Text style={styles.chatName}>
+                  {chat.is_group && chat.members.length > 2
+                    ? chat.members
+                        .filter((user) => user.id !== currentUserId)
+                        .map((user) => user.username)
+                        .join(", ")
+                    : otherUser?.username}
+                </Text>
+
                 <Text style={styles.lastMessage} numberOfLines={1}>
                   {chat.last_message?.content || "No messages yet"}
                 </Text>
@@ -125,6 +138,13 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#E0C097",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  plusButton: {
+    borderRadius: 10,
+    marginRight: 10,
   },
   headerTitle: {
     fontSize: 24,

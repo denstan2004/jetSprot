@@ -129,19 +129,11 @@ export const styles = StyleSheet.create({
 
   warningContainer: {
     backgroundColor: "#FFFBE4",
-    padding: 12,
-    margin: 8,
+    padding: 10,
     borderRadius: 12,
-    borderWidth: 1,
     borderColor: "#AC591A",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    opacity: 0.5,
+    marginBottom: 10,
   },
   warningText: {
     color: "#AC591A",
@@ -170,6 +162,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     gap: 10,
+    marginBottom: 15,
   },
 
   followButton: {

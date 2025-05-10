@@ -10,7 +10,7 @@ import {
   Image,
   Animated,
 } from "react-native";
-import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { styles } from "./styles";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
@@ -65,9 +65,13 @@ export const UserPage = () => {
     navigation.navigate("EditProfile");
   };
 
-  const handleDeletePost = (id: number) => {
-    setPosts(posts.filter((post) => post.id !== id));
+  const handleNavigateToSearchCountry = () => {
+    navigation.navigate("FoundCountry");
   };
+
+  // const handleDeletePost = (id: number) => {
+  //   setPosts(posts.filter((post) => post.id !== id));
+  // };
 
   const getFollowersCount = async () => {
     if (userId) {
@@ -130,6 +134,7 @@ export const UserPage = () => {
           const response = await getPostUserApi(userId);
           setPosts(response || []);
         } catch (error) {
+          console.error("Error fetching posts:", error);
           console.error("Error fetching posts:", error);
         }
       }
@@ -205,14 +210,16 @@ export const UserPage = () => {
         </View>
       </View>
       <View style={styles.headerBackground}>
-        {hasMissingInfo() && (
-          <View style={styles.warningContainer}>
+        {/* {hasMissingInfo() && ( */}
+          <TouchableOpacity
+            style={styles.warningContainer}
+            onPress={handleNavigateToSearchCountry}
+          >
             <Text style={styles.warningText}>
-              Please complete your profile by adding your first name, last name,
-              birth date and username.
+              Please complete your profile by adding your country, city and sport.
             </Text>
-          </View>
-        )}
+          </TouchableOpacity>
+        {/* )} */} 
 
         <View style={styles.avatarSection}>
           <View style={styles.leftSide}>
@@ -264,10 +271,10 @@ export const UserPage = () => {
           </View>
         </View>
 
-        <Animated.View style={[styles.additionalInfo, additionalInfoStyle]}>
-          <Text style={styles.statusText}>
+
+          {/* <Text style={styles.statusText}>
             {currentUser?.status || "No status"}
-          </Text>
+          </Text> */}
           {userId !== sel?.id.toString() && (
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.followButton}>
@@ -278,7 +285,7 @@ export const UserPage = () => {
               </TouchableOpacity>
             </View>
           )}
-        </Animated.View>
+
       </View>
 
       <Animated.View style={[styles.profileBody, profileBodyStyle]}>
@@ -288,8 +295,10 @@ export const UserPage = () => {
           resizeMode="cover"
         >
           <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
+            style={{ flexDirection: "row",  justifyContent:
+              userId === sel?.id.toString() ? "space-between" : "center", }}
           >
+
             <TouchableOpacity onPress={() => setShowDopInfo(!showDopInfo)}>
               <View
                 style={{
@@ -300,7 +309,7 @@ export const UserPage = () => {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
-              >
+              > 
                 <Ionicons
                   name={showDopInfo ? "arrow-up" : "arrow-down"}
                   size={24}
@@ -308,6 +317,7 @@ export const UserPage = () => {
                 />
               </View>
             </TouchableOpacity>
+
             {userId === sel?.id.toString() && (
               <TouchableOpacity
                 onPress={() => navigation.navigate("CreatePost")}

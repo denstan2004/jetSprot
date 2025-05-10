@@ -6,6 +6,7 @@ import { Map } from "./Map";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ChatsList } from "./Chat/ChatsList";
 import AllPublication from "../AllPublication";
+import SearchUser from "../SearchUser";
 
 export const Home = () => {
   const Tab = createBottomTabNavigator();
@@ -56,7 +57,20 @@ export const Home = () => {
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
-              name={focused ? "card-search" : "card-search-outline"}
+              name={focused ? "ballot" : "ballot-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="SearchUser"
+        component={SearchUser}
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? "account-search" : "account-search-outline"}
               color={color}
               size={size}
             />

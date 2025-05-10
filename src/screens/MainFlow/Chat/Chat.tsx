@@ -10,11 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ImageBackground,
+  Image,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { wsUrl as wsUrlApi } from "@/API/apiUrl";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+import { storage } from "@/firebase";
+import { getDownloadURL, ref } from "firebase/storage";
 
 interface ChatMessage {
   _id: string;
@@ -30,15 +33,19 @@ type ChatScreenRouteProp = RouteProp<AuthStackParamList, "UserChat">;
 
 export const ChatScreen = () => {
   const route = useRoute<ChatScreenRouteProp>();
-  const { chatId, userId, userName } = route.params;
-  console.log("userId", userId);
-  console.log("userName", userName);
+  const ourUserId =
+    useSelector((state: RootState) => state.user.userData?.id) || 1;
+  const { chatId } = route.params;
+  console.log("chatId", chatId);
   const { accessToken } = useSelector((state: RootState) => state.user);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
+  const currentUser = useSelector((state: RootState) => state.user.userData);
+  const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
 
   const wsUrl = `${wsUrlApi}/chat/${chatId}/?token=${accessToken}`;
 
@@ -135,7 +142,23 @@ export const ChatScreen = () => {
   }, [connectWebSocket]);
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
-    const isMyMessage = item.user._id !== userId.toString();
+    const isMyMessage = item.user._id !== ourUserId.toString();
+
+    // useEffect(() => {
+    //   const fetchPfpUrl = async () => {
+    //     if (item.user.pfp_url) {
+    //       try {
+    //         const storageRef = ref(storage, item.user.pfp_url);
+    //         const url = await getDownloadURL(storageRef);
+    //         setMediaUrl(url);
+    //       } catch (error) {
+    //         console.error("Failed to fetch avatar:", error);
+    //       }
+    //     }
+    //   };
+
+    //   fetchPfpUrl();
+    // }, [currentUser]);
 
     return (
       <TouchableOpacity
@@ -145,6 +168,13 @@ export const ChatScreen = () => {
           isMyMessage ? styles.myMessage : styles.otherMessage,
         ]}
       >
+        {/* {item.user._id === userId.toString() && (
+          <View style={styles.messageHeader}>
+            <Image source={{ uri: pfpUrls[item.user._id] || "" }} style={styles.profileImage} />
+            <Text style={[styles.messageText, {color: "#000", fontWeight: "bold",}]}>{item.user.name}</Text>
+          </View>
+        )} */}
+
         <Text style={styles.messageText}>{item.text}</Text>
         <Text style={styles.messageTime}>
           {new Date(item.createdAt).toLocaleTimeString([], {
@@ -215,6 +245,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 40,
+    backgroundColor: "#FFFBE4",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  messageHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 10,
   },
   messagesContainer: {
     flex: 1,

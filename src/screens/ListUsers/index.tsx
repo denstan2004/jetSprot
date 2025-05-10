@@ -1,4 +1,11 @@
-import { SafeAreaView, ScrollView, View } from "react-native";
+import {
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  View,
+  Text,
+  StyleSheet,
+} from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { User } from "@/types/User";
 import { getDownloadURL, ref } from "firebase/storage";
@@ -14,6 +21,7 @@ export const ListUsers = () => {
   const route = useRoute<RouteProp<RootStackParamList, "listUsers">>();
   const { followers } = route.params;
   const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchProfilePictures = async () => {
@@ -38,9 +46,15 @@ export const ListUsers = () => {
   }, [followers]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFBE4" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFBE4" }}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backButtonText}>← Back</Text>
+      </TouchableOpacity>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 15, paddingTop: 10 }}
+        contentContainerStyle={{ paddingHorizontal: 15, paddingTop: 100 }}
       >
         {followers.map((user) => (
           <UserCard
@@ -54,6 +68,21 @@ export const ListUsers = () => {
           />
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  backButton: {
+    padding: 8,
+    position: "absolute",
+    top: 60,
+    left: 10,
+    zIndex: 1,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: "#5B3400",
+    fontWeight: "bold",
+  },
+});

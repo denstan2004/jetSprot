@@ -78,18 +78,21 @@ export const EditProfile = () => {
     }
   };
 
-  const hadleBack = () => {
-    // console.log("back");
-    navigation.navigate("Home");
-  };
+  // const hadleBack = () => {
+  //   // console.log("back");
+  //   navigation.navigate("Home");
+  // };
   return (
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
       style={styles.root}
     >
-      <TouchableOpacity style={[styles.backButton]} onPress={hadleBack}>
-        <View style={styles.backButtonInner} />
+     <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
 
       <ImageBackground

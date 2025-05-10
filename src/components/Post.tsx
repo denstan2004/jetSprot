@@ -18,8 +18,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { storage } from "@/firebase";
 import { getDownloadURL, ref } from "firebase/storage";
 import { ResizeMode, Video } from "expo-av";
-import { apiUrl } from "@/API/apiUrl";
-import deletePublication from "@/API/publication/deletePublication";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
