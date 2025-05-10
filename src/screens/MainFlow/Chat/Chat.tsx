@@ -11,6 +11,8 @@ import {
   Platform,
   ImageBackground,
   Image,
+  SafeAreaView,
+  Dimensions,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { wsUrl as wsUrlApi } from "@/API/apiUrl";
@@ -18,6 +20,15 @@ import { RouteProp, useRoute } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { storage } from "@/firebase";
 import { getDownloadURL, ref } from "firebase/storage";
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+  useSharedValue,
+  interpolate,
+  Extrapolate,
+  interpolateColor,
+  withTiming,
+} from "react-native-reanimated";
 
 interface ChatMessage {
   _id: string;
@@ -46,9 +57,11 @@ export const ChatScreen = () => {
   const currentUser = useSelector((state: RootState) => state.user.userData);
   const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuAnimation = useSharedValue(0);
+  const { width } = Dimensions.get("window");
 
   const wsUrl = `${wsUrlApi}/chat/${chatId}/?token=${accessToken}`;
-
   const connectWebSocket = useCallback(() => {
     const socket = new WebSocket(wsUrl);
     console.log("connecting to", socket);
@@ -165,7 +178,7 @@ export const ChatScreen = () => {
         onLongPress={() => markRead(item._id)}
         style={[
           styles.messageContainer,
-          isMyMessage ? styles.myMessage : styles.otherMessage,
+          isMyMessage ? styles.otherMessage : styles.myMessage,
         ]}
       >
         {/* {item.user._id === userId.toString() && (
@@ -186,58 +199,108 @@ export const ChatScreen = () => {
     );
   };
 
-  return (
-    <ImageBackground
-      source={require("../../../assets/Basketball2.png")}
-      style={{ flex: 1 }}
-      resizeMode="cover"
-    >
-      <View style={{ flex: 1, backgroundColor: "#FFFBE4AA" }}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-        >
-          <View style={styles.messagesContainer}>
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              renderItem={renderMessage}
-              keyExtractor={(item) => item._id}
-              onContentSizeChange={() =>
-                flatListRef.current?.scrollToEnd({ animated: true })
-              }
-              onLayout={() =>
-                flatListRef.current?.scrollToEnd({ animated: true })
-              }
-            />
-          </View>
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+    menuAnimation.value = withTiming(isMenuOpen ? 0 : 1, {
+      duration: 1000,
+    });
+  };
+  const menuContentStyle = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(menuAnimation.value, [0, 1], [1, 0]),
+    };
+  });
+  const menuStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: interpolate(
+            menuAnimation.value,
+            [0, 1],
+            [0, width],
+            Extrapolate.CLAMP
+          ),
+        },
+      ],
+      backgroundColor: interpolateColor(
+        menuAnimation.value,
+        [0, 1],
+        ["#FFFBE4", "#803511"]
+      ),
+    };
+  });
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              value={newMessage}
-              onChangeText={setNewMessage}
-              placeholder="Type a message..."
-              multiline
-            />
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={sendMessage}
-              disabled={!newMessage.trim()}
-            >
-              <Text style={styles.sendButtonText}>Send</Text>
+  return (
+    <SafeAreaView style={styles.container}>
+      <ImageBackground
+        source={require("../../../assets/Basketball2.png")}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        <View style={{ flex: 1, backgroundColor: "#FFFBE4AA" }}>
+          <View style={styles.topBar}>
+            <TouchableOpacity onPress={toggleMenu} style={styles.burgerButton}>
+              <View style={styles.burgerLine} />
+              <View style={styles.burgerLine} />
+              <View style={styles.burgerLine} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.connectionStatus}>
-            <Text style={styles.connectionStatusText}>
-              {isConnected ? "Connected" : "Disconnected"}
-            </Text>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
-    </ImageBackground>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          >
+            <View style={{ flex: 1 }}>
+              <Animated.View style={[styles.menu, menuStyle]}>
+                <Animated.View style={[styles.menuContent, menuContentStyle]}>
+                  <Text>Hello</Text>
+                </Animated.View>
+              </Animated.View>
+
+              <View style={styles.messagesContainer}>
+                <FlatList
+                  ref={flatListRef}
+                  data={messages}
+                  renderItem={renderMessage}
+                  keyExtractor={(item) => item._id}
+                  onContentSizeChange={() =>
+                    flatListRef.current?.scrollToEnd({ animated: true })
+                  }
+                  onLayout={() =>
+                    flatListRef.current?.scrollToEnd({ animated: true })
+                  }
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder="Type a message..."
+                multiline
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={sendMessage}
+                disabled={!newMessage.trim()}
+              >
+                <Text style={styles.sendButtonText}>Send</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.connectionStatus}>
+              <Text style={styles.connectionStatusText}>
+                {isConnected ? "Connected" : "Chat is not available"}
+              </Text>
+            </View>
+            
+          </KeyboardAvoidingView>
+        </View>
+      </ImageBackground>
+    </SafeAreaView>
   );
 };
 
@@ -271,20 +334,23 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   myMessage: {
+    minWidth: 120,
     alignSelf: "flex-end",
-    backgroundColor: "#007AFF",
+    backgroundColor: "rgb(192, 78, 25)",
+    color: "#FFFBE4",
   },
   otherMessage: {
+    minWidth: 120,
     alignSelf: "flex-start",
-    backgroundColor: "#E5E5EA",
+    backgroundColor: "rgb(148, 62, 22)",
   },
   messageText: {
-    color: "#000",
+    color: "#FFFBE4",
     fontSize: 16,
   },
   messageTime: {
     fontSize: 12,
-    color: "#666",
+    color: "#FFFBE4",
     alignSelf: "flex-end",
     marginTop: 5,
   },
@@ -300,7 +366,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "",
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -308,7 +374,7 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#803511",
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -322,12 +388,66 @@ const styles = StyleSheet.create({
     padding: 5,
     alignItems: "center",
     position: "absolute",
-    bottom: 55,
+    top: 0,
     left: 0,
     right: 0,
   },
   connectionStatusText: {
     fontSize: 12,
-    color: "#666",
+    color: "#803511",
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    padding: 15,
+    backgroundColor: "#803511",
+  },
+  burgerButton: {
+    width: 30,
+    height: 24,
+    justifyContent: "space-between",
+    marginRight: 15,
+  },
+  burgerLine: {
+    width: "100%",
+    height: 3,
+    backgroundColor: "#FFFBE4",
+    borderRadius: 2,
+  },
+  chatTitle: {
+    fontSize: 20,
+    color: "#FFFBE4",
+    fontWeight: "bold",
+  },
+  menu: {
+    position: "absolute",
+    zIndex: 1000,
+    top: 0,
+    right: 0,
+    width: "80%",
+    height: "100%",
+    backgroundColor: "#FFFBE4",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuContent: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+  },
+  menuItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#80351133",
+  },
+  menuText: {
+    fontSize: 18,
+    color: "#803511",
   },
 });

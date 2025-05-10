@@ -11,6 +11,8 @@ import {
 import { useSelector } from "react-redux";
 import { styles } from "./styles";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import UserCard from "@/components/UserListCard";
 import getAllUsers from "@/API/user/getAllUsers";
 import { User } from "@/types/User";
@@ -18,11 +20,10 @@ import { useState } from "react";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/firebase";
 
-
-
 const Users = () => {
   const token = useSelector((state: RootState) => state.user.accessToken);
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,10 +100,6 @@ const Users = () => {
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => navigation.navigate("ChatGroup" as never)}> 
-          <Text style={styles.createGroupText}>Create Group</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
@@ -125,6 +122,9 @@ const Users = () => {
             pfpUrl={pfpUrls[user.id]}
             userId={user.id.toString()}
             isSelected={false}
+            onCardPress={() =>
+              navigation.navigate("User", { userId: user.id.toString() })
+            }
           />
         ))}
       </ScrollView>

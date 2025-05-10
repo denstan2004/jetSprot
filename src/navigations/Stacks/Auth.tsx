@@ -17,7 +17,7 @@ import { UserPage } from "@/screens/MainFlow/User";
 import { ChatScreen } from "@/screens/MainFlow/Chat/Chat";
 import FoundCountry from "@/screens/FoundCountry";
 import SearchUser from "@/screens/SearchUser";
-import ChatGroup from "@/screens/ChatGroup";
+import CreateGroupChat from "@/screens/ChatGroup";
 
 export type AuthStackParamList = {
   Authorization: undefined;
@@ -33,7 +33,6 @@ export type AuthStackParamList = {
   UserChat: { chatId: number };
   FoundCountry: undefined;
   SearchUser: undefined;
-  ChatGroup: { userId: string };
   // GroupChat: { groupId: number; groupName: string };
 };
 
@@ -110,11 +109,7 @@ export function AuthNavigator() {
         component={SearchUser}
       />
 
-      <AuthStack.Screen
-        options={screenOptions}
-        name="ChatGroup"
-        component={ChatGroup}
-      />
+     
     </AuthStack.Navigator>
   );
 }

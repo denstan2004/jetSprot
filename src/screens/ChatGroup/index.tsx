@@ -22,7 +22,7 @@ import { createChat } from "@/API/chat/createChat";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 
-const Users = () => {
+const CreateGroupChat = ({ onBack }: { onBack: () => void }) => {
   const token = useSelector((state: RootState) => state.user.accessToken);
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
@@ -104,32 +104,22 @@ const Users = () => {
   };
 
   const createGroup = async () => {
-    try {
-      const response = await createChat(
-        token,
-        selectedUsers.map((user) => user.id),
-        selectedUsers.length > 1
-      );
-      console.log("Create chat response:", response);
+    const response = await createChat(
+      token,
+      selectedUsers.map((user) => user.id),
+      selectedUsers.length > 1
+    );
+    console.log(response);
 
-      if (response?.id) {
-        console.log("Navigating to chat with ID:", response.id);
-        navigation.navigate("UserChat", { chatId: response.id });
-      } else {
-        console.log("No chat ID in response:", response);
-      }
-    } catch (error) {
-      console.error("Error creating chat:", error);
+    if (response?.id) {
+      navigation.navigate("UserChat", { chatId: response.id });
     }
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFBE4" }}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={onBack}>
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
       </View>
@@ -190,4 +180,4 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default CreateGroupChat;

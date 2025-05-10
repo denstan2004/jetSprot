@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+import CreateGroupChat from "@/screens/ChatGroup";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
@@ -25,7 +26,7 @@ export const ChatsList = () => {
   const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
   const token = useSelector((state: RootState) => state.user.accessToken);
   const navigation = useNavigation<NavigationProp>();
-
+  const [searchUsersVisible, setSearchUsersVisible] = useState(false);
   const currentUserId = useSelector(
     (state: RootState) => state.user.userData?.id
   );
@@ -56,14 +57,16 @@ export const ChatsList = () => {
   const getOtherUser = (chat: ChatInterface) => {
     return chat.members.find((user) => user.id !== currentUserId);
   };
-
+  if(searchUsersVisible) {
+    return <CreateGroupChat onBack={() => setSearchUsersVisible(false)} />
+  }
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Messages</Text>
         <TouchableOpacity
           style={styles.plusButton}
-          onPress={() => navigation.navigate("SearchUser")}
+          onPress={() => setSearchUsersVisible(true)}
         >
           <Ionicons name="add" size={24} color="#5B3400" />
         </TouchableOpacity>
