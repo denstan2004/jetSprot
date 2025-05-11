@@ -12,6 +12,11 @@ import { rem } from "@/theme/units";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 
+interface Sport {
+  id: number;
+  name: string;
+}
+
 export const Announcement = () => {
   const route = useRoute<RouteProp<AuthStackParamList, "Announcement">>();
   const navigation = useNavigation();
@@ -31,9 +36,11 @@ export const Announcement = () => {
         <View style={styles.card}>
           <View style={styles.header}>
             <View style={styles.sportsContainer}>
-              {announcement.sports.map((sport, index) => (
+              {announcement.sports.map((sport: Sport | string, index) => (
                 <View key={index} style={styles.sportTag}>
-                  <Text style={styles.sportText}>{sport}</Text>
+                  <Text style={styles.sportText}>
+                    {typeof sport === "object" ? sport.name : sport}
+                  </Text>
                 </View>
               ))}
             </View>

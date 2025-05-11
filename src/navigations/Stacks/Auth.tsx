@@ -18,7 +18,7 @@ import { ChatScreen } from "@/screens/MainFlow/Chat/Chat";
 import FoundCountry from "@/screens/FoundCountry";
 import SearchUser from "@/screens/SearchUser";
 import CreateGroupChat from "@/screens/ChatGroup";
-
+import { AnouncementList } from "@/screens/MainFlow/AnouncementList";
 export type AuthStackParamList = {
   Authorization: undefined;
   SignIn: undefined;
@@ -34,6 +34,7 @@ export type AuthStackParamList = {
   FoundCountry: undefined;
   SearchUser: undefined;
   // GroupChat: { groupId: number; groupName: string };
+  AnouncementList: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -83,6 +84,11 @@ export function AuthNavigator() {
       />
       <AuthStack.Screen
         options={screenOptions}
+        name="AnouncementList"
+        component={AnouncementList}
+      />
+      <AuthStack.Screen
+        options={screenOptions}
         name="CreatePost"
         component={CreatePost}
       />
@@ -108,7 +114,6 @@ export function AuthNavigator() {
         name="SearchUser"
         component={SearchUser}
       />
-
      
     </AuthStack.Navigator>
   );
