@@ -13,10 +13,11 @@ import {
   Image,
   SafeAreaView,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { wsUrl as wsUrlApi } from "@/API/apiUrl";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { storage } from "@/firebase";
 import { getDownloadURL, ref } from "firebase/storage";
@@ -29,6 +30,10 @@ import Animated, {
   interpolateColor,
   withTiming,
 } from "react-native-reanimated";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import DeleteGroup from "@/components/DeleteGroup";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import RemoveUserFromGroup from "@/components/RemoveUser";
 
 interface ChatMessage {
   _id: string;
@@ -55,8 +60,20 @@ export const ChatScreen = () => {
   const [newMessage, setNewMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
   const currentUser = useSelector((state: RootState) => state.user.userData);
-  const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+
+
+  const [isRemoveUserFromGroupVisible, setIsRemoveUserFromGroupVisible] = useState(false);
+  const [nameGroup, setNameGroup] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedGroupName, setEditedGroupName] = useState(nameGroup);
+  const [isDeleteGroupVisible, setIsDeleteGroupVisible] = useState(false);
+  const isAdmin = true;
+  const moder = false;
+
+  // const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
+  // const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuAnimation = useSharedValue(0);
   const { width } = Dimensions.get("window");
@@ -135,6 +152,8 @@ export const ChatScreen = () => {
     }
   };
 
+  //TODO:
+
   const markRead = (messageId: string) => {
     if (ws) {
       ws.send(
@@ -153,6 +172,24 @@ export const ChatScreen = () => {
       ws?.close();
     };
   }, [connectWebSocket]);
+
+  const handleDeleteGroup = () => {
+    setIsDeleteGroupVisible(true);
+  };
+
+  const handleEditGroupName = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveGroupName = () => {
+    setNameGroup(editedGroupName);
+  };
+
+
+  const removeUserFromGroup = () => {
+    setIsDeleteGroupVisible(true);
+  };
+
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isMyMessage = item.user._id !== ourUserId.toString();
@@ -198,7 +235,6 @@ export const ChatScreen = () => {
       </TouchableOpacity>
     );
   };
-
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
     menuAnimation.value = withTiming(isMenuOpen ? 0 : 1, {
@@ -237,6 +273,7 @@ export const ChatScreen = () => {
         style={{ flex: 1 }}
         resizeMode="cover"
       >
+        onContentSizeChange
         <View style={{ flex: 1, backgroundColor: "#FFFBE4AA" }}>
           <View style={styles.topBar}>
             <TouchableOpacity onPress={toggleMenu} style={styles.burgerButton}>
@@ -254,7 +291,215 @@ export const ChatScreen = () => {
             <View style={{ flex: 1 }}>
               <Animated.View style={[styles.menu, menuStyle]}>
                 <Animated.View style={[styles.menuContent, menuContentStyle]}>
-                  <Text>Hello</Text>
+                  <View style={styles.menuHeader}>
+                    {isEditing ? (
+                      <TextInput
+                        style={[
+                          styles.menuHeaderText,
+                          {
+                            borderBottomWidth: 1,
+                            borderColor: "#803511",
+                            paddingVertical: 2,
+                          },
+                        ]}
+                        value={editedGroupName}
+                        onChangeText={setEditedGroupName}
+                        onBlur={handleSaveGroupName}
+                        autoFocus
+                      />
+                    ) : (
+                      <Text style={styles.menuHeaderText}>
+                        {editedGroupName}
+                      </Text>
+                    )}
+
+                    {isAdmin && (
+                      <View style={{ flexDirection: "row", gap: 10 }}>
+                        <TouchableOpacity onPress={handleDeleteGroup}>
+                          <Ionicons
+                            name="trash-outline"
+                            size={24}
+                            color="rgb(179, 10, 10)"
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleEditGroupName}>
+                          <Ionicons
+                            name="create-outline"
+                            size={24}
+                            color="rgb(179, 10, 10)"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.menuParticipants}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={styles.menuParticipantsText}>
+                        Group members
+                      </Text>
+                      {isAdmin && (
+                        <TouchableOpacity
+                          onPress={() => navigation.navigate("SearchUser")}
+                          style={styles.plusButton}
+                        >
+                          <Ionicons
+                            name="add"
+                            size={20}
+                            style={styles.plusButtonIcon}
+                          />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <View style={styles.menuParticipantsList}>
+                      <ScrollView contentContainerStyle={{ gap: 10, flex: 1 }}>
+                        <View style={styles.menuParticipantsItem}>
+                          <Image
+                            source={require("../../../assets/Basketball2.png")}
+                            style={styles.avatar}
+                            resizeMode="cover"
+                          />
+                          <View style={{ flexDirection: "column" }}>
+                            <Text style={{ fontSize: 10, color: "#803511" }}>
+                              Author
+                            </Text>
+                            <Text style={{ fontSize: 16, color: "#803511" }}>
+                              Name
+                            </Text>
+                          </View>
+                          {isAdmin && (
+                            <View
+                              style={{
+                                flex: 1,
+                                gap: 5,
+                                flexDirection: "row",
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <TouchableOpacity onPress={removeUserFromGroup}>
+                                <Text style={styles.iconsDelete}>
+                                  <Ionicons
+                                    name="person-remove"
+                                    size={20}
+                                    color="black"
+                                  />
+                                </Text>
+                              </TouchableOpacity>
+                              {/* <Ionicons name="medal-outline" size={20} color="gold" /> */}
+                              {/* <Ionicons name="swap-horizontal" size={20} color="black" /> */}
+                              {/* <TouchableOpacity>
+                                <Ionicons
+                                  name="arrow-up"
+                                  size={20}
+                                  color="green"
+                                />
+                                <Ionicons
+                                  name="arrow-down"
+                                  size={20}
+                                  color="orange"
+                                />
+                              </TouchableOpacity> */}
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={styles.menuParticipantsItem}>
+                          <Image
+                            source={require("../../../assets/Basketball2.png")}
+                            style={styles.avatar}
+                            resizeMode="cover"
+                          />
+                          <View style={{ flexDirection: "column" }}>
+                            <Text style={{ fontSize: 10, color: "#803511" }}>
+                              Moder
+                            </Text>
+                            <Text style={{ fontSize: 16, color: "#803511" }}>
+                              Name
+                            </Text>
+                          </View>
+                          {isAdmin && (
+                            <TouchableOpacity
+                              style={{
+                                flex: 1,
+                                gap: 5,
+                                flexDirection: "row",
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <Text style={styles.iconsDelete}>
+                                <Ionicons
+                                  name="person-remove"
+                                  size={20}
+                                  color="black"
+                                />
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+
+                        <View style={styles.menuParticipantsItem}>
+                          <Image
+                            source={require("../../../assets/Basketball2.png")}
+                            style={styles.avatar}
+                            resizeMode="cover"
+                          />
+                          <Text>Name</Text>
+                          {isAdmin && (
+                            <TouchableOpacity
+                              style={{
+                                flex: 1,
+                                gap: 5,
+                                flexDirection: "row",
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <Text style={styles.iconsDelete}>
+                                <Ionicons
+                                  name="person-remove"
+                                  size={20}
+                                  color="black"
+                                />
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+
+                        <View style={styles.menuParticipantsItem}>
+                          <Image
+                            source={require("../../../assets/Basketball2.png")}
+                            style={styles.avatar}
+                            resizeMode="cover"
+                          />
+                          <Text>Name</Text>
+                          {isAdmin && (
+                            <TouchableOpacity
+                              style={{
+                                flex: 1,
+                                gap: 5,
+                                flexDirection: "row",
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <Text style={styles.iconsDelete}>
+                                <Ionicons
+                                  name="person-remove"
+                                  size={20}
+                                  color="black"
+                                />
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </ScrollView>
+                    </View>
+                  </View>
                 </Animated.View>
               </Animated.View>
 
@@ -295,8 +540,14 @@ export const ChatScreen = () => {
               <Text style={styles.connectionStatusText}>
                 {isConnected ? "Connected" : "Chat is not available"}
               </Text>
+
+              {isDeleteGroupVisible && (
+                <DeleteGroup onClose={() => setIsDeleteGroupVisible(false)} />
+              )}
+              {isRemoveUserFromGroupVisible && (
+                <RemoveUserFromGroup onClose={() => setIsRemoveUserFromGroupVisible(false)} />
+              )}
             </View>
-            
           </KeyboardAvoidingView>
         </View>
       </ImageBackground>
@@ -307,7 +558,7 @@ export const ChatScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#FFFBE4",
   },
   profileImage: {
     width: 40,
@@ -438,6 +689,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   menuContent: {
+    flex: 1,
     paddingTop: 60,
     paddingHorizontal: 20,
   },
@@ -449,5 +701,68 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 18,
     color: "#803511",
+  },
+  menuHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 20,
+  },
+  menuHeaderText: {
+    fontSize: 18,
+    color: "#803511",
+    fontWeight: "bold",
+  },
+  menuParticipants: {
+    flex: 1,
+    paddingVertical: 50,
+  },
+  menuParticipantsText: {
+    fontSize: 18,
+    color: "#803511",
+  },
+  menuParticipantsList: {
+    flex: 1,
+    paddingVertical: 15,
+    flexDirection: "column",
+    borderColor: "#803511",
+    borderWidth: 1,
+    borderRadius: 10,
+    gap: 10,
+    padding: 10,
+  },
+  menuHeaderButton: {
+    backgroundColor: "#803511",
+    padding: 10,
+    borderRadius: 10,
+  },
+  menuHeaderButtonText: {
+    color: "#FFFBE4",
+    fontWeight: "bold",
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  menuParticipantsItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#803511",
+    borderRadius: 10,
+    padding: 10,
+  },
+  plusButton: {
+    padding: 10,
+  },
+  plusButtonIcon: {
+    color: "#803511",
+  },
+  iconsDelete: {
+    color: "#803511",
+    fontSize: 20,
+    fontWeight: "bold",
   },
 });
