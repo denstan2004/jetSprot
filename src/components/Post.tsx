@@ -199,7 +199,7 @@ const Post = ({ post }: PostProps) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Comments</Text>
               <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="black" />
+                <Ionicons name="close" size={24} color="rgb(98, 56, 0)" />
               </TouchableOpacity>
             </View>
 
@@ -208,33 +208,35 @@ const Post = ({ post }: PostProps) => {
                 <Text style={styles.noComments}>No comments yet...</Text>
               ) : (
                 comments.map((comment, index) => (
-                  <View key={index} style={styles.commentCard}>
-                    <View style={styles.commentContent}>
-                      <TouchableOpacity onPress={handleProfilePress}>
-                        <Image
-                          source={{ uri: mediaUrl || "" }}
-                          style={styles.commentAvatar}
-                        />
-                      </TouchableOpacity>
-
-                      <View style={styles.commentTextContainer}>
-                        <Text style={styles.commentUsername}>
-                          {comment.author_username}
-                        </Text>
-
-                        <Text style={styles.commentText}>
-                          {comment.content}
-                        </Text>
-                      </View>
-
-                      <View style={styles.likeButton}>
-                        <TouchableOpacity>
-                          <Ionicons
-                            name={isLiked ? "heart" : "heart-outline"}
-                            size={20}
-                            color="#AC591A"
+                  <View key={index} style={{}}>
+                    <View style={styles.commentCard}>
+                      <View style={styles.commentContent}>
+                        <TouchableOpacity onPress={handleProfilePress}>
+                          <Image
+                            source={{ uri: mediaUrl || "" }}
+                            style={styles.commentAvatar}
                           />
                         </TouchableOpacity>
+
+                        <View style={styles.commentTextContainer}>
+                          <Text style={styles.commentUsername}>
+                            {comment.author_username}
+                          </Text>
+
+                          <Text style={styles.commentText}>
+                            {comment.content}
+                          </Text>
+                        </View>
+
+                        <View style={styles.likeButton}>
+                          <TouchableOpacity>
+                            <Ionicons
+                              name={isLiked ? "heart" : "heart-outline"}
+                              size={20}
+                              color="#AC591A"
+                            />
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     </View>
                   </View>
@@ -254,7 +256,7 @@ const Post = ({ post }: PostProps) => {
                 onPress={addComment}
                 style={styles.addCommentButton}
               >
-                <Ionicons name="send" size={24} color="#5B3400" />
+                <Ionicons name="send" size={24} color="rgb(98, 56, 0)" />
               </TouchableOpacity>
             </View>
           </View>
@@ -268,13 +270,12 @@ export default Post;
 
 const styles = StyleSheet.create({
   postCard: {
-    backgroundColor: "#FFFBE4",
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 5, height: 3 },
+    shadowOpacity: 0,
     shadowRadius: 6,
     elevation: 4,
   },
@@ -298,13 +299,13 @@ const styles = StyleSheet.create({
     color: "#5B3400",
   },
   caption: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#AC591A",
     marginBottom: 8,
   },
   description: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#5B3400",
     marginBottom: 12,
   },
@@ -361,8 +362,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0C097",
     paddingBottom: 10,
   },
   modalTitle: {
@@ -383,12 +382,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   commentCard: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
     paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0C097",
   },
   commentContent: {
     flexDirection: "row",
@@ -408,8 +410,8 @@ const styles = StyleSheet.create({
     color: "#5B3400",
   },
   commentText: {
-    color: "#AC591A",
-    fontSize: 14,
+    color: "#5B3400",
+    fontSize: 16,
   },
   addCommentContainer: {
     flexDirection: "row",
@@ -420,10 +422,15 @@ const styles = StyleSheet.create({
   commentInput: {
     flex: 1,
     padding: 8,
-    borderRadius: 8,
-    backgroundColor: "#F4F4F4",
-    borderColor: "#E0C097",
-    borderWidth: 1,
+    paddingLeft: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#ffffff",
     marginRight: 8,
   },
   addCommentButton: {

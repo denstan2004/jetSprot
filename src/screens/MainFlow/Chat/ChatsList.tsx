@@ -14,10 +14,11 @@ import { useSelector } from "react-redux";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/firebase";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import CreateGroupChat from "@/screens/ChatGroup";
+import React from "react";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
@@ -31,34 +32,36 @@ export const ChatsList = () => {
     (state: RootState) => state.user.userData?.id
   );
 
-  useEffect(() => {
-    const fetchChats = async () => {
-      const chats = await getAllChats(token);
-      console.log(chats);
-      setChats(chats);
-      const urls: Record<string, string> = {};
-      for (const chat of chats) {
-        for (const user of chat.members) {
-          if (user.pfp_url && user.id !== currentUserId) {
-            try {
-              const url = await getDownloadURL(ref(storage, user.pfp_url));
-              urls[user.id] = url;
-            } catch (err) {
-              console.warn("Error loading image for user", user.id, err);
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchChats = async () => {
+        const chats = await getAllChats(token);
+        console.log(chats);
+        setChats(chats);
+        const urls: Record<string, string> = {};
+        for (const chat of chats) {
+          for (const user of chat.members) {
+            if (user.pfp_url && user.id !== currentUserId) {
+              try {
+                const url = await getDownloadURL(ref(storage, user.pfp_url));
+                urls[user.id] = url;
+              } catch (err) {
+                console.warn("Error loading image for user", user.id, err);
+              }
             }
           }
         }
-      }
-      setPfpUrls(urls);
-    };
-    fetchChats();
-  }, [currentUserId]);
+        setPfpUrls(urls);
+      };
+      fetchChats();
+    }, [currentUserId])
+  );
 
   const getOtherUser = (chat: ChatInterface) => {
     return chat.members.find((user) => user.id !== currentUserId);
   };
-  if(searchUsersVisible) {
-    return <CreateGroupChat onBack={() => setSearchUsersVisible(false)} />
+  if (searchUsersVisible) {
+    return <CreateGroupChat onBack={() => setSearchUsersVisible(false)} />;
   }
   return (
     <SafeAreaView style={styles.container}>
@@ -139,8 +142,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0C097",
+
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0C097",
+    borderBottomColor: "rgba(225, 185, 134, 0.39)",
     alignItems: "center",
   },
   avatar: {
@@ -184,7 +186,8 @@ const styles = StyleSheet.create({
     color: "#AC591A",
   },
   chatMeta: {
-    alignItems: "flex-end",
+    alignItems: "center",
+    justifyContent: "center",
   },
   timestamp: {
     fontSize: 12,

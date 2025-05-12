@@ -194,6 +194,16 @@ export const UserPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* {hasMissingInfo() && ( */}
+      <TouchableOpacity
+        style={styles.warningContainer}
+        onPress={handleNavigateToSearchCountry}
+      >
+        <Text style={styles.warningText}>
+          Please complete your profile by adding your country, city and sport.
+        </Text>
+      </TouchableOpacity>
+      {/* )} */}
       <View style={styles.headerTopRow}>
         <View style={styles.iconGroup}>
           <TouchableOpacity style={styles.icon}>
@@ -210,23 +220,13 @@ export const UserPage = () => {
         </View>
       </View>
       <View style={styles.headerBackground}>
-        {/* {hasMissingInfo() && ( */}
-          <TouchableOpacity
-            style={styles.warningContainer}
-            onPress={handleNavigateToSearchCountry}
-          >
-            <Text style={styles.warningText}>
-              Please complete your profile by adding your country, city and sport.
-            </Text>
-          </TouchableOpacity>
-        {/* )} */} 
-
         <View style={styles.avatarSection}>
           <View style={styles.leftSide}>
-            <Text style={styles.username}>
-              {firstName} {lastName}
-            </Text>
-
+            <View>
+              <Text style={styles.username}>
+                {firstName} {lastName}
+              </Text>
+            </View>
             <View style={styles.avatarContainer}>
               <TouchableOpacity
                 onPress={handleNavigateToEditProfile}
@@ -260,7 +260,11 @@ export const UserPage = () => {
               <TouchableOpacity onPress={handleNavigateToFollows}>
                 <View style={styles.statsItem}>
                   <Text
-                    style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+                    style={{
+                      color: "white",
+                      fontSize: 16,
+                      fontWeight: "bold",
+                    }}
                   >
                     {follows.length}
                   </Text>
@@ -271,21 +275,19 @@ export const UserPage = () => {
           </View>
         </View>
 
-
-          {/* <Text style={styles.statusText}>
+        {/* <Text style={styles.statusText}>
             {currentUser?.status || "No status"}
           </Text> */}
-          {userId !== sel?.id.toString() && (
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.followButton}>
-                <Text style={styles.buttonText}>Follow</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.messageButton}>
-                <Text style={styles.buttonText}>Message</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
+        {userId !== sel?.id.toString() && (
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.followButton}>
+              <Text style={styles.buttonText}>Follow</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.messageButton}>
+              <Text style={styles.buttonText}>Message</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <Animated.View style={[styles.profileBody, profileBodyStyle]}>
@@ -295,24 +297,26 @@ export const UserPage = () => {
           resizeMode="cover"
         >
           <View
-            style={{ flexDirection: "row",  justifyContent:
-              userId === sel?.id.toString() ? "space-between" : "center", }}
+            style={{
+              padding: 10,
+              flexDirection: "row",
+              justifyContent:
+                userId === sel?.id.toString() ? "space-between" : "center",
+            }}
           >
-
             <TouchableOpacity onPress={() => setShowDopInfo(!showDopInfo)}>
               <View
                 style={{
-                  width: 30,
-                  height: 30,
                   backgroundColor: showDopInfo ? "#803511" : "transparent",
                   borderRadius: 15,
                   justifyContent: "center",
+
                   alignItems: "center",
                 }}
-              > 
+              >
                 <Ionicons
                   name={showDopInfo ? "arrow-up" : "arrow-down"}
-                  size={24}
+                  size={28}
                   color={showDopInfo ? "white" : "#803511"}
                 />
               </View>
@@ -334,7 +338,7 @@ export const UserPage = () => {
                 >
                   <Ionicons
                     name="add-sharp"
-                    size={24}
+                    size={28}
                     color={showDopInfo ? "white" : "#803511"}
                   />
                 </View>
@@ -344,10 +348,10 @@ export const UserPage = () => {
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ padding: 10 }}
+            contentContainerStyle={{ gap: 10 }}
           >
             {posts.map((post, index) => (
-              <View key={index} style={{ marginVertical: 10 }}>
+              <View key={index}>
                 <Post post={post} />
               </View>
             ))}

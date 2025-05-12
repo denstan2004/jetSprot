@@ -1,3 +1,5 @@
+import { SportInterface } from "@/API/sport/getSports";
+
 export interface Marker {
    id: number,
             creator: {
@@ -12,5 +14,5 @@ export interface Marker {
     created_at: string;
     valid_until: string;
     announcement: number;
-    sports: string[];
+    sports: SportInterface[];
 }

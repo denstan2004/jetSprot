@@ -11,10 +11,8 @@ export const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   postContainer: {
-    backgroundColor: "white",
     borderRadius: 16,
     marginBottom: 16,
-    padding: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Text,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { useEffect, useState } from "react";
 import { getAllMarkers } from "@/API/announcement/markers/getAllMarkers";
@@ -44,7 +45,7 @@ export const Map = () => {
     null
   );
   const [sports, setSports] = useState<SportInterface[]>([]);
-
+  const [filterdMarkers, setFilterdMarkers] = useState<MarkerType[]>([]);
   const [mapKey, setMapKey] = useState(0);
   const menuAnimation = useSharedValue(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,6 +71,24 @@ export const Map = () => {
     }
   }, [selectedMarker]);
 
+  useEffect(() => {
+    if (selectedSports.length > 0) {
+      setFilterdMarkers(
+        markers.filter((marker) =>
+          marker.sports.some((sport) => selectedSports.includes(sport.id))
+        )
+      );
+    } else {
+      setFilterdMarkers([]);
+    }
+  }, [selectedSports]);
+  useEffect(() => {
+    markers.forEach((element) => {
+      console.log(element.sports);
+    });
+    console.log("filterdMarkers", filterdMarkers);
+    console.log("selectedSports", selectedSports);
+  }, [filterdMarkers, selectedMarker, markers]);
   const handleMarkerPress = (marker: MarkerType) => {
     setSelectedMarker(marker);
     setModalVisible(true);
@@ -131,7 +150,7 @@ export const Map = () => {
           translateY: interpolate(
             menuAnimation.value,
             [0, 1],
-            [0, -320],
+            [0, -220],
             Extrapolate.CLAMP
           ),
         },
@@ -174,25 +193,38 @@ export const Map = () => {
           longitudeDelta: 0.1,
         }}
       >
-        {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            onPress={() => handleMarkerPress(marker)}
-            coordinate={{
-              latitude: parseFloat(marker.latitude),
-              longitude: parseFloat(marker.longitude),
-            }}
-            title={marker.city}
-            description={marker.country}
-          />
-        ))}
+        {selectedSports.length > 0
+          ? filterdMarkers.map((marker) => (
+              <Marker
+                key={marker.id}
+                onPress={() => handleMarkerPress(marker)}
+                coordinate={{
+                  latitude: parseFloat(marker.latitude),
+                  longitude: parseFloat(marker.longitude),
+                }}
+                title={marker.city}
+                description={marker.country}
+              />
+            ))
+          : markers.map((marker) => (
+              <Marker
+                key={marker.id}
+                onPress={() => handleMarkerPress(marker)}
+                coordinate={{
+                  latitude: parseFloat(marker.latitude),
+                  longitude: parseFloat(marker.longitude),
+                }}
+                title={marker.city}
+                description={marker.country}
+              />
+            ))}
       </MapView>
-      <Animated.View style={[styles.MenuButton, menuButtonStyle]}>
-        <TouchableOpacity
-          onPress={() => {
-            toggleMenu();
-          }}
-        >
+      <TouchableOpacity
+        onPress={() => {
+          toggleMenu();
+        }}
+      >
+        <Animated.View style={[styles.MenuButton, menuButtonStyle]}>
           <Animated.View style={menuIconStyle}>
             <AnimatedIonicons
               name={isMenuOpen ? "close" : "menu"}
@@ -200,8 +232,17 @@ export const Map = () => {
               style={menuIconStyle}
             />
           </Animated.View>
-        </TouchableOpacity>
-      </Animated.View>
+        </Animated.View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.viewAll}
+        onPress={() => {
+          navigation.navigate("AnouncementList");
+        }}
+      >
+        <Ionicons name="open-outline" size={24} color="#803511" />
+      </TouchableOpacity>
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => {
@@ -211,40 +252,30 @@ export const Map = () => {
         <Ionicons name="add" size={24} color="#AC591A" />
       </TouchableOpacity>
       <Animated.View style={[styles.menu, menuStyle]}>
-        <View
-          style={{ flexDirection: "row", gap: rem(10), alignItems: "center" }}
-        >
-          <Text style={styles.viewAll}>VIEW ALL ANNOUNCEMENTS</Text>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate("AnouncementList");
-            }}
-          >
-            <Ionicons name="open-outline" size={24} color="#803511" />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.sportsTitle}>FILTER BY SPORTS:</Text>
-        <View style={styles.sportsContainer}>
-          {sports.map((sport) => (
-            <TouchableOpacity
-              key={sport.id}
-              style={[
-                styles.sportButton,
-                selectedSports.includes(sport.id) && styles.selectedSport,
-              ]}
-              onPress={() => handleSportSelect(sport.id)}
-            >
-              <Text
+        <ScrollView showsHorizontalScrollIndicator={false}>
+          <View style={styles.sportsContainer}>
+            {sports.map((sport) => (
+              <TouchableOpacity
+                key={sport.id}
                 style={[
-                  styles.sportText,
-                  selectedSports.includes(sport.id) && styles.selectedSportText,
+                  styles.sportButton,
+                  selectedSports.includes(sport.id) && styles.selectedSport,
                 ]}
+                onPress={() => handleSportSelect(sport.id)}
               >
-                {sport.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.sportText,
+                    selectedSports.includes(sport.id) &&
+                      styles.selectedSportText,
+                  ]}
+                >
+                  {sport.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       </Animated.View>
 
       <Modal
@@ -281,7 +312,7 @@ export const Map = () => {
                   {selectedMarker.sports.length > 0 ? (
                     selectedMarker.sports.map((sport, index) => (
                       <Text key={index} style={styles.sportItem}>
-                        {sport}
+                        {sport.name}
                       </Text>
                     ))
                   ) : (
@@ -341,9 +372,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: rem(12),
     paddingVertical: rem(6),
     borderRadius: rem(16),
-    backgroundColor: "white",
-    borderWidth: 3,
-    borderColor: "#803511",
+    backgroundColor: "rgba(213, 208, 169, 0.51)",
   },
   selectedSport: {
     backgroundColor: "#803511",
@@ -354,7 +383,7 @@ const styles = StyleSheet.create({
     color: "#803511",
   },
   sportsTitle: {
-    marginTop: rem(30),
+    marginTop: rem(10),
     marginLeft: rem(10),
     fontFamily: "Poppins-Bold",
     fontWeight: "bold",
@@ -441,7 +470,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: "100%",
-    height: rem(300),
+    height: rem(200),
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     backgroundColor: "#FFFBE4",
@@ -455,7 +484,21 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   viewAll: {
-    marginLeft: rem(10),
+    zIndex: 10000,
+    position: "absolute",
+    top: 50,
+    left: 10,
+    backgroundColor: "white",
+    width: 70,
+    height: 70,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
     fontFamily: "Poppins-Bold",
     fontWeight: "bold",
     color: "#803511",

@@ -1,4 +1,10 @@
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  ImageBackground,
+} from "react-native";
 import { styles } from "./style";
 import allPublication from "@/API/publication/allPublication";
 import { useEffect, useState } from "react";
@@ -31,22 +37,28 @@ const AllPublication = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.listContainer}
-        showsVerticalScrollIndicator={false}
+      <ImageBackground
+        source={require("../../assets/BasketballSide2.png")}
+        style={{ flex: 1 }}
+        resizeMode="cover"
       >
-        {posts.length > 0 ? (
-          posts.map((post, index) => (
-            <View key={index} style={styles.postContainer}>
-              <Post post={post} />
+        <ScrollView
+          style={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {posts.length > 0 ? (
+            posts.map((post, index) => (
+              <View key={index} style={styles.postContainer}>
+                <Post post={post} />
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyStateText}>No publications found</Text>
             </View>
-          ))
-        ) : (
-          <View style={styles.emptyStateContainer}>
-            <Text style={styles.emptyStateText}>No publications found</Text>
-          </View>
-        )}
-      </ScrollView>
+          )}
+        </ScrollView>
+      </ImageBackground>
     </View>
   );
 };

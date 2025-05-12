@@ -17,6 +17,7 @@ export const styles = StyleSheet.create({
 
   iconGroup: {
     flexDirection: "row",
+    paddingRight: 20,
     gap: 15,
   },
 
@@ -28,6 +29,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    padding: 10,
   },
 
   profileImage: {
@@ -39,14 +41,15 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   leftSide: {
+    gap: 10,
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
   },
 
   rightSide: {
+    paddingTop: 20,
     flex: 1,
-    marginLeft: 20,
   },
 
   avatarContainer: {
@@ -56,7 +59,6 @@ export const styles = StyleSheet.create({
     borderRadius: 40,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
   },
 
   addIconContainer: {
@@ -80,7 +82,6 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFBE4",
-    marginBottom: 4,
   },
 
   name: {
@@ -98,11 +99,13 @@ export const styles = StyleSheet.create({
 
   statsRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    marginLeft: 5,
     paddingHorizontal: 10,
+    gap: 15,
   },
 
   statsItem: {
+    gap: 5,
     alignItems: "center",
   },
 
@@ -121,7 +124,6 @@ export const styles = StyleSheet.create({
   profileBody: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 20,
     backgroundColor: "#FFFBE4",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -191,8 +193,8 @@ export const styles = StyleSheet.create({
 
   profileBodyBackground: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 0,
+    paddingTop: 0,
     backgroundColor: "#FFFBE4",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

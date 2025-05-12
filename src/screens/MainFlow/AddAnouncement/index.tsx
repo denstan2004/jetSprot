@@ -21,6 +21,7 @@ import { RootState } from "@/store/redux/store";
 import { CreateAnnouncementData } from "@/API/announcement/createAnnouncement";
 import { deleteAnnouncement } from "@/API/announcement/deleteAnnouncement";
 import { getSports, SportInterface } from "@/API/sport/getSports";
+import * as Location from "expo-location";
 // import { createMarker } from "@/API/announcement/markers/createMarker";
 
 const AddAnnouncement = () => {
@@ -56,22 +57,24 @@ const AddAnnouncement = () => {
 
   const handleSubmit = async () => {
     try {
-      if (sel && sel.accessToken && sel.userData?.id) {
-        const announcementData: CreateAnnouncementData = {
-          sport_ids: selectedSports,
-          caption,
-          description,
-          valid_until: validUntil.toISOString(),
-          required_amount: parseInt(requiredAmount),
-          status: 1,
-        };
-        const response = await createAnnouncement(
-          announcementData,
-          sel?.accessToken
-        );
-        if (response.id !== undefined) {
-          setAnnouncementId(response.id);
-          setShowLocationPicker(true);
+      if (selectedSports.length !== 0) {
+        if (sel && sel.accessToken && sel.userData?.id) {
+          const announcementData: CreateAnnouncementData = {
+            sport_ids: selectedSports,
+            caption,
+            description,
+            valid_until: validUntil.toISOString(),
+            required_amount: parseInt(requiredAmount),
+            status: 1,
+          };
+          const response = await createAnnouncement(
+            announcementData,
+            sel?.accessToken
+          );
+          if (response.id !== undefined) {
+            setAnnouncementId(response.id);
+            setShowLocationPicker(true);
+          }
         }
       }
     } catch (error) {
@@ -105,186 +108,215 @@ const AddAnnouncement = () => {
     }
   };
 
+  const getAddressFromCoordinates = async (
+    latitude: number,
+    longitude: number
+  ) => {
+    try {
+      const response = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+
+      if (response[0]) {
+        console.log(response[0].country, response[0].city);
+        setLocation((prev) => ({
+          ...prev,
+          country: response[0].country || "",
+          city: response[0].city || response[0].region || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error getting address:", error);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#5B3400" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Create Announcement</Text>
-      </View>
-
-      <ScrollView style={styles.content}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Caption</Text>
-          <TextInput
-            style={styles.input}
-            value={caption}
-            onChangeText={setCaption}
-            placeholder="Enter announcement caption"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Enter announcement description"
-            multiline
-            numberOfLines={4}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Required Amount</Text>
-          <TextInput
-            style={styles.input}
-            value={requiredAmount}
-            onChangeText={setRequiredAmount}
-            placeholder="Enter number of people required"
-            keyboardType="numeric"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Valid Until</Text>
+    <>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => setShowDatePicker(true)}
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <Text>{validUntil.toLocaleDateString()}</Text>
-            <Ionicons name="calendar" size={20} color="#5B3400" />
+            <Ionicons name="arrow-back" size={24} color="#5B3400" />
           </TouchableOpacity>
+          <Text style={styles.title}>Create Announcement</Text>
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Sports</Text>
-          <View style={styles.sportsContainer}>
-            {sports.map((sport) => (
-              <TouchableOpacity
-                key={sport.id}
-                style={[
-                  styles.sportButton,
-                  selectedSports.includes(sport.id) && styles.selectedSport,
-                ]}
-                onPress={() => handleSportSelect(sport.id)}
-              >
-                <Text
-                  style={[
-                    styles.sportText,
-                    selectedSports.includes(sport.id) &&
-                      styles.selectedSportText,
-                  ]}
-                >
-                  {sport.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        <ScrollView style={styles.content}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Caption</Text>
+            <TextInput
+              style={styles.input}
+              value={caption}
+              onChangeText={setCaption}
+              placeholder="Enter announcement caption"
+            />
           </View>
-        </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Create Announcement</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Enter announcement description"
+              multiline
+              numberOfLines={4}
+            />
+          </View>
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={validUntil}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              setValidUntil(selectedDate);
-            }
-          }}
-        />
-      )}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Required Amount</Text>
+            <TextInput
+              style={styles.input}
+              value={requiredAmount}
+              onChangeText={setRequiredAmount}
+              placeholder="Enter number of people required"
+              keyboardType="numeric"
+            />
+          </View>
 
-      <Modal
-        visible={showLocationPicker}
-        animationType="slide"
-        onRequestClose={() => setShowLocationPicker(false)}
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => {
-                if (announcementId) {
-                  deleteAnnouncement(announcementId, sel?.accessToken);
-                }
-                setShowLocationPicker(false);
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Valid Until</Text>
+
+            <DateTimePicker
+              value={validUntil}
+              mode="date"
+              style={{
+                backgroundColor: "#AC591A",
+                borderRadius: 17,
+                justifyContent: "center",
+                alignItems: "center",
               }}
-            >
-              <Ionicons name="arrow-back" size={24} color="#5B3400" />
-            </TouchableOpacity>
-            <Text style={styles.title}>Select Location</Text>
+              textColor="#ffffff"
+              display="compact"
+              onChange={(event, selectedDate) => {
+                if (selectedDate) {
+                  setValidUntil(selectedDate);
+                }
+              }}
+            />
           </View>
 
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: location.latitude,
-              longitude: location.longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-            onPress={(e) => {
-              setLocation({
-                ...location,
-                latitude: e.nativeEvent.coordinate.latitude,
-                longitude: e.nativeEvent.coordinate.longitude,
-              });
-            }}
-          >
-            <Marker
-              coordinate={{
+          <View style={styles.sportsSection}>
+            <Text style={styles.label}>Sports</Text>
+            <View style={styles.sportsContainer}>
+              {sports.map((sport) => (
+                <TouchableOpacity
+                  key={sport.id}
+                  style={[
+                    styles.sportButton,
+                    selectedSports.includes(sport.id) && styles.selectedSport,
+                  ]}
+                  onPress={() => handleSportSelect(sport.id)}
+                >
+                  <Text
+                    style={[
+                      styles.sportText,
+                      selectedSports.includes(sport.id) &&
+                        styles.selectedSportText,
+                    ]}
+                  >
+                    {sport.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Create Announcement</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <Modal
+          visible={showLocationPicker}
+          animationType="slide"
+          onRequestClose={() => setShowLocationPicker(false)}
+        >
+          <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => {
+                  if (announcementId) {
+                    deleteAnnouncement(announcementId, sel?.accessToken);
+                  }
+                  setShowLocationPicker(false);
+                }}
+              >
+                <Ionicons name="arrow-back" size={24} color="#5B3400" />
+              </TouchableOpacity>
+              <Text style={styles.title}>Select Location</Text>
+            </View>
+
+            <MapView
+              style={styles.map}
+              initialRegion={{
                 latitude: location.latitude,
                 longitude: location.longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
               }}
-            />
-          </MapView>
+              onPress={async (e) => {
+                const newLocation = {
+                  ...location,
+                  latitude: e.nativeEvent.coordinate.latitude,
+                  longitude: e.nativeEvent.coordinate.longitude,
+                };
+                setLocation(newLocation);
+                await getAddressFromCoordinates(
+                  newLocation.latitude,
+                  newLocation.longitude
+                );
+              }}
+            >
+              <Marker
+                coordinate={{
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                }}
+              />
+            </MapView>
 
-          <View style={styles.locationInputs}>
-            <TextInput
-              style={styles.input}
-              placeholder="Country"
-              value={location.country}
-              onChangeText={(text) =>
-                setLocation({ ...location, country: text })
-              }
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="City"
-              value={location.city}
-              onChangeText={(text) => setLocation({ ...location, city: text })}
-            />
-          </View>
+            <View style={styles.locationInputs}>
+              <TextInput
+                style={styles.input}
+                placeholder="Country"
+                value={location.country}
+                onChangeText={(text) =>
+                  setLocation({ ...location, country: text })
+                }
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="City"
+                value={location.city}
+                onChangeText={(text) =>
+                  setLocation({ ...location, city: text })
+                }
+              />
+            </View>
 
-          <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleLocationSelect}
-          >
-            <Text style={styles.submitButtonText}>Confirm Location</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      </Modal>
-    </SafeAreaView>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleLocationSelect}
+            >
+              <Text style={styles.submitButtonText}>Confirm Location</Text>
+            </TouchableOpacity>
+          </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFBE4",
+    backgroundColor: "rgba(214, 186, 26, 0.13)",
   },
   header: {
     flexDirection: "row",
@@ -300,7 +332,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: rem(20),
     fontWeight: "bold",
-    color: "#5B3400",
+    color: "rgb(151, 97, 27)",
     marginLeft: rem(16),
   },
   content: {
@@ -312,11 +344,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: rem(16),
-    color: "#5B3400",
+    color: "rgb(159, 97, 17)",
     marginBottom: rem(8),
   },
   input: {
-    backgroundColor: "white",
+    backgroundColor: "rgb(255, 255, 255)",
     borderRadius: rem(8),
     padding: rem(12),
     fontSize: rem(16),
@@ -333,18 +365,22 @@ const styles = StyleSheet.create({
     borderRadius: rem(8),
     padding: rem(12),
   },
+  sportsSection: {
+    flex: 1,
+    marginBottom: rem(16),
+  },
   sportsContainer: {
+    flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: rem(8),
+    minHeight: rem(200),
   },
   sportButton: {
     paddingHorizontal: rem(12),
     paddingVertical: rem(6),
     borderRadius: rem(16),
-    backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#AC591A",
+    backgroundColor: "hsla(56, 82.60%, 38.20%, 0.19)",
   },
   selectedSport: {
     backgroundColor: "#AC591A",
@@ -358,7 +394,7 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: "#AC591A",
     padding: rem(16),
-    borderRadius: rem(8),
+    borderRadius: rem(20),
     alignItems: "center",
     marginTop: rem(16),
   },
