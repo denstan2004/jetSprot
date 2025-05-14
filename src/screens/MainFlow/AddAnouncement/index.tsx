@@ -14,7 +14,10 @@ import { rem } from "@/theme/units";
 import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import MapView, { Marker } from "react-native-maps";
-import { createAnnouncement } from "@/API/announcement/createAnnouncement";
+import {
+  createAnnouncement,
+  EventType,
+} from "@/API/announcement/createAnnouncement";
 import { createMarker } from "@/API/announcement/markers/createMarker";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
@@ -32,7 +35,8 @@ const AddAnnouncement = () => {
   const [requiredAmount, setRequiredAmount] = useState("");
   const [selectedSports, setSelectedSports] = useState<number[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [validUntil, setValidUntil] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const sel = useSelector((state: RootState) => state.user);
   const [announcementId, setAnnouncementId] = useState<number | null>(null);
@@ -56,55 +60,43 @@ const AddAnnouncement = () => {
   }, []);
 
   const handleSubmit = async () => {
+    setShowLocationPicker(true);
+  };
+
+  const handleLocationSelect = async () => {
     try {
       if (selectedSports.length !== 0) {
         if (sel && sel.accessToken && sel.userData?.id) {
           const announcementData: CreateAnnouncementData = {
             sport_ids: selectedSports,
             caption,
-            description,
-            valid_until: validUntil.toISOString(),
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+            event_type: EventType.announcement,
             required_amount: parseInt(requiredAmount),
             status: 1,
+            description: description,
           };
           const response = await createAnnouncement(
             announcementData,
             sel?.accessToken
           );
-          if (response.id !== undefined) {
-            setAnnouncementId(response.id);
-            setShowLocationPicker(true);
-          }
+          const markerResponse = await createMarker(
+            {
+              latitude: location.latitude.toString(),
+              longitude: location.longitude.toString(),
+              country: location.country,
+              city: location.city,
+              announcement: response.id,
+            },
+            sel?.accessToken
+          );
+          console.log(markerResponse);
+          console.log(response);
         }
       }
     } catch (error) {
       console.error("Error creating announcement:", error);
-    }
-  };
-
-  const handleLocationSelect = async () => {
-    try {
-      if (!announcementId) {
-        throw new Error("No announcement ID available");
-      }
-
-      const response = await createMarker(
-        {
-          latitude: location.latitude.toString(),
-          longitude: location.longitude.toString(),
-          country: location.country,
-          city: location.city,
-          announcement: announcementId,
-        },
-        sel?.accessToken
-      );
-      console.log(response);
-      if (response?.id) {
-        navigation.goBack();
-      }
-    } catch (error) {
-      console.error("Error creating marker:", error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -144,7 +136,7 @@ const AddAnnouncement = () => {
           <Text style={styles.title}>Create Announcement</Text>
         </View>
 
-        <ScrollView style={styles.content}>
+        <View style={styles.content}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Caption</Text>
             <TextInput
@@ -179,13 +171,13 @@ const AddAnnouncement = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Valid Until</Text>
+            <Text style={styles.label}>Start Date</Text>
 
             <DateTimePicker
-              value={validUntil}
-              mode="date"
+              minimumDate={new Date()}
+              value={startDate}
+              mode="datetime"
               style={{
-                backgroundColor: "#AC591A",
                 borderRadius: 17,
                 justifyContent: "center",
                 alignItems: "center",
@@ -194,7 +186,25 @@ const AddAnnouncement = () => {
               display="compact"
               onChange={(event, selectedDate) => {
                 if (selectedDate) {
-                  setValidUntil(selectedDate);
+                  setStartDate(selectedDate);
+                }
+              }}
+            />
+            <Text style={styles.label}>End Date</Text>
+            <DateTimePicker
+              value={endDate}
+              mode="datetime"
+              minimumDate={startDate}
+              style={{
+                borderRadius: 17,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              textColor="#ffffff"
+              display="compact"
+              onChange={(event, selectedDate) => {
+                if (selectedDate) {
+                  setEndDate(selectedDate);
                 }
               }}
             />
@@ -202,7 +212,12 @@ const AddAnnouncement = () => {
 
           <View style={styles.sportsSection}>
             <Text style={styles.label}>Sports</Text>
-            <View style={styles.sportsContainer}>
+            <ScrollView
+              showsVerticalScrollIndicator={true}
+              indicatorStyle="black"
+              contentContainerStyle={styles.sportsContainer}
+          
+          >
               {sports.map((sport) => (
                 <TouchableOpacity
                   key={sport.id}
@@ -223,13 +238,13 @@ const AddAnnouncement = () => {
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </View>
 
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
             <Text style={styles.submitButtonText}>Create Announcement</Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
 
         <Modal
           visible={showLocationPicker}
@@ -354,7 +369,7 @@ const styles = StyleSheet.create({
     fontSize: rem(16),
   },
   textArea: {
-    height: rem(100),
+    height: rem(70),
     textAlignVertical: "top",
   },
   dateButton: {
@@ -370,17 +385,18 @@ const styles = StyleSheet.create({
     marginBottom: rem(16),
   },
   sportsContainer: {
-    flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: rem(8),
-    minHeight: rem(200),
+    paddingVertical: rem(16),
   },
   sportButton: {
+    width: "30%",
     paddingHorizontal: rem(12),
     paddingVertical: rem(6),
     borderRadius: rem(16),
-    backgroundColor: "hsla(56, 82.60%, 38.20%, 0.19)",
+    backgroundColor: "hsla(31, 52.80%, 38.20%, 0.11)",
+    marginBottom: rem(8),
   },
   selectedSport: {
     backgroundColor: "#AC591A",

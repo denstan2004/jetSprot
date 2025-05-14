@@ -5,7 +5,7 @@ const deletePublication = async (publicationId: string, token: string) => {
   console.log(token);
   try {
     const response = await axios.delete(
-      `${apiUrl}/publication/${publicationId}`,
+      `${apiUrl}/publication/${publicationId}/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
