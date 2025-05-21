@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { Post as PostInterface } from "@/types/Post";
@@ -24,45 +26,74 @@ import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { Comment } from "@/types/Comments";
 import getComments from "@/API/comments/getComments";
 import addComments from "@/API/comments/addComments";
+import PostLike from "@/API/publication/postLikes";
+import RetractLike from "@/API/publication/retractlike";
+import CommRetractLikeLikes from "@/API/comments/commentsRetractlike";
+import CommentsLikes from "@/API/comments/commentsLikes";
+import deleteComments from "@/API/comments/deleteComent";
+import getUserById from "@/API/user/getUserById";
 interface PostProps {
   // onDelete: (id: number) => void;
   post: PostInterface;
 }
-// зробити карточку коментаря в кожному коментарі зробити забит по юзера звідти треба юзернейм і пфп піктуре ==> на фаєрбейз дістав зображення і вдобразив
-//press modal, зробив запит на бек, дістати всі коментарі по посту, закинув їх в юзстейт, якщо додаєш коментарій то робиш запит якщо запит повернув ок то додаєш власний комент в юз стейт після цього як закрив модалку очистив стейт
+
 const Post = ({ post }: PostProps) => {
   const sel = useSelector((state: RootState) => state.user.userData);
   const access = useSelector((state: RootState) => state.user.accessToken);
+  // console.log(access)
   const [isLiked, setIsLiked] = useState(post.is_liked);
+  const [likesCount, setLikesCount] = useState(post.likes);
+
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 
-  // const [author, setAuthor] = useState<User | null>(null);
+  const [author, setAuthor] = useState<User | null>(null);
   useEffect(() => {}, [post]);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
+  const creator = async () => {
+    const response = await getUserById(post.creator.toString());
+    setAuthor(response.data);
+
+    return response.data;
+  };
+
+  useEffect(() => {
+    creator();
+  }, []);
+
   const handleProfilePress = () => {
     navigation.navigate("User", { userId: post.creator.toString() });
+  };
+
+  const fetchComments = async () => {
+    try {
+      const response = await getComments(post.id.toString());
+      setComments(response.data || []);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      setComments([]);
+    }
   };
 
   const openModal = async () => {
     setModalVisible(true);
     await fetchComments();
+    console.log(comments);
   };
 
   const closeModal = () => {
     setModalVisible(false);
-    setComments([]);
   };
 
   useEffect(() => {
     const fetchPfpUrl = async () => {
-      if (sel?.pfp_url) {
+      if (author?.pfp_url) {
         try {
-          const storageRef = ref(storage, sel.pfp_url);
+          const storageRef = ref(storage, author.pfp_url);
           const url = await getDownloadURL(storageRef);
           if (
             url.includes(
@@ -79,16 +110,6 @@ const Post = ({ post }: PostProps) => {
 
     fetchPfpUrl();
   }, [post.media]);
-
-  const fetchComments = async () => {
-    try {
-      const response = await getComments();
-      setComments(response.data || []);
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-      setComments([]);
-    }
-  };
 
   const addComment = async () => {
     try {
@@ -109,7 +130,7 @@ const Post = ({ post }: PostProps) => {
     }
   };
 
-  // const handleDelete = async () => {
+  // const handleDeletePost = async () => {
   //   try {
   //     console.log(post.creator);
   //     console.log(sel?.id);
@@ -128,6 +149,49 @@ const Post = ({ post }: PostProps) => {
   //   }
   // };
 
+  const toggleLikePost = async () => {
+    try {
+      if (isLiked) {
+        const res = await RetractLike(post.id.toString(), access);
+        console.log("RetractLike res:", res);
+        setIsLiked(false);
+        setLikesCount((prev) => prev - 1);
+      } else {
+        const res = await PostLike(post.id.toString(), access);
+        console.log("PostLike res:", res);
+        setIsLiked(true);
+        setLikesCount((prev) => prev + 1);
+      }
+    } catch (err) {
+      console.log("Like toggle error:", err);
+    }
+  };
+
+  const toggleLikeComments = async (commentId: string) => {
+    try {
+      // const IS_CURRENT_USER=TRUE
+      const targetComment = comments.find((c) => c.id.toString() === commentId);
+
+      if (targetComment?.is_liked) {
+        await CommRetractLikeLikes(commentId, access);
+      } else {
+        await CommentsLikes(commentId, access);
+      }
+    } catch (err) {
+      console.log("Like toggle error:", err);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const response = await deleteComments(commentId, access);
+      console.log(response);
+      fetchComments();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <View key={post.id} style={styles.postCard}>
       <View style={styles.header}>
@@ -138,10 +202,10 @@ const Post = ({ post }: PostProps) => {
           <Text style={styles.username}>{post.creator_username}</Text>
         </View>
       </View>
-      {/* 
-      <TouchableOpacity onPress={handleDelete}>
+
+      {/* <TouchableOpacity>
         <Text>Delete</Text>
-      </TouchableOpacity> */}
+      </TouchableOpacity>  */}
 
       <Text style={styles.caption}>{post.caption}</Text>
       <Text style={styles.description}>{post.description}</Text>
@@ -169,18 +233,14 @@ const Post = ({ post }: PostProps) => {
 
       <View style={styles.footer}>
         <View style={styles.likes}>
-          <TouchableOpacity
-            onPress={() => {
-              setIsLiked(!isLiked);
-            }}
-          >
+          <TouchableOpacity onPress={toggleLikePost}>
             <Ionicons
               name={isLiked ? "heart" : "heart-outline"}
               size={20}
               color="#AC591A"
             />
           </TouchableOpacity>
-          <Text style={styles.footerText}>{post.likes}</Text>
+          <Text style={styles.footerText}>{likesCount}</Text>
         </View>
         <TouchableOpacity style={styles.comments} onPress={openModal}>
           <Ionicons name="chatbubble-outline" size={20} color="#5B3400" />
@@ -194,22 +254,29 @@ const Post = ({ post }: PostProps) => {
         animationType="slide"
         onRequestClose={closeModal}
       >
-        <View style={styles.bottomModalContainer}>
-          <View style={styles.bottomModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Comments</Text>
-              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="rgb(98, 56, 0)" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          // keyboardVerticalOffset={10}
+        >
+          <View style={styles.bottomModalContainer}>
+            <View style={styles.bottomModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Comments</Text>
+                <TouchableOpacity
+                  onPress={closeModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="black" />
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView style={styles.modalBody}>
-              {comments.length === 0 || comments.length === undefined ? (
-                <Text style={styles.noComments}>No comments yet...</Text>
-              ) : (
-                comments.map((comment, index) => (
-                  <View key={index} style={{}}>
-                    <View style={styles.commentCard}>
+              <ScrollView style={styles.modalBody}>
+                {comments.length === 0 || comments.length === undefined ? (
+                  <Text style={styles.noComments}>No comments yet...</Text>
+                ) : (
+                  comments.map((comment, index) => (
+                    <View key={index} style={styles.commentCard}>
                       <View style={styles.commentContent}>
                         <TouchableOpacity onPress={handleProfilePress}>
                           <Image
@@ -229,38 +296,58 @@ const Post = ({ post }: PostProps) => {
                         </View>
 
                         <View style={styles.likeButton}>
-                          <TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() =>
+                              toggleLikeComments(comment.id.toString())
+                            }
+                          >
                             <Ionicons
-                              name={isLiked ? "heart" : "heart-outline"}
+                              name={
+                                comment.is_liked ? "heart" : "heart-outline"
+                              }
                               size={20}
                               color="#AC591A"
                             />
                           </TouchableOpacity>
+                          {comment.author_username === sel?.username && (
+                            <TouchableOpacity
+                              onPress={() =>
+                                handleDeleteComment(comment.id.toString())
+                              }
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={20}
+                                color="rgb(179, 10, 10)"
+                              />
+                            </TouchableOpacity>
+                          )}
+                          <Text style={styles.footerText}>{comment.likes}</Text>
                         </View>
                       </View>
                     </View>
-                  </View>
-                ))
-              )}
-            </ScrollView>
+                  ))
+                )}
+              </ScrollView>
 
-            <View style={styles.addCommentContainer}>
-              <TextInput
-                style={styles.commentInput}
-                value={newComment}
-                onChangeText={setNewComment}
-                placeholder="Write a comment..."
-                placeholderTextColor="#AC591A"
-              />
-              <TouchableOpacity
-                onPress={addComment}
-                style={styles.addCommentButton}
-              >
-                <Ionicons name="send" size={24} color="rgb(98, 56, 0)" />
-              </TouchableOpacity>
+              <View style={styles.addCommentContainer}>
+                <TextInput
+                  style={styles.commentInput}
+                  value={newComment}
+                  onChangeText={setNewComment}
+                  placeholder="Write a comment..."
+                  placeholderTextColor="#AC591A"
+                />
+                <TouchableOpacity
+                  onPress={addComment}
+                  style={styles.addCommentButton}
+                >
+                  <Ionicons name="send" size={24} color="#5B3400" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -437,8 +524,10 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   likeButton: {
-    padding: 4,
+    padding: 10,
     alignItems: "center",
-    justifyContent: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
   },
 });

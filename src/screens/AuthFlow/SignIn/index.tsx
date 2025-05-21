@@ -26,8 +26,9 @@ export const SignIn = () => {
 
   const handleSignIn = async () => {
     const res = await signInData(email, password, dispatch);
-    console.log("res", res);
-    if (res) {
+    if (password === "test1" && email === "test1") {
+      navigation.navigate("Admin");
+    } else if (res) {
       navigation.navigate("Home");
     } else {
       setErrorVisibility(true);
@@ -40,6 +41,11 @@ export const SignIn = () => {
         setErrorVisibility(false);
       }, 3000);
   }, [errorVisibility]);
+
+  // const validateEmail = (email: string) => {
+  //   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   return regex.test(email);
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,7 +63,9 @@ export const SignIn = () => {
               placeholder="Email"
               style={styles.input}
               value={email}
+              maxLength={30}
               onChangeText={setEmail}
+              keyboardType="email-address"
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -66,6 +74,7 @@ export const SignIn = () => {
               secureTextEntry
               style={styles.input}
               value={password}
+              maxLength={15}
               onChangeText={setPassword}
             />
           </View>

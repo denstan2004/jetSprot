@@ -65,6 +65,7 @@ export const ListUsers = () => {
             rating={user.rating}
             pfpUrl={pfpUrls[user.id]}
             userId={user.id.toString()}
+            isSelected={false}
           />
         ))}
       </ScrollView>

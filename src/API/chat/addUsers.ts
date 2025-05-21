@@ -1,8 +1,8 @@
 import axios from "axios"
 import { apiUrl } from "../apiUrl";
 
-const addUsers = async (token: string, chatId: number, userIds: number[]) => {
-  const response = await axios.post(`${apiUrl}/chatroom/8/add-users/`, {
+const addUsers = async (token: string, chatId: string, userIds: number[]) => {
+  const response = await axios.post(`${apiUrl}/chatroom/${chatId}/add-users/`, {
     user_ids: userIds,
   }, {
     headers: {

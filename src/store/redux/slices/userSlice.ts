@@ -26,6 +26,7 @@ const userSlice = createSlice({
       };
     },
     updateUser(state, { payload }: PayloadAction<User>) {
+      // console.log('Payload', payload)
       return {
         ...state,    
         userData: payload,

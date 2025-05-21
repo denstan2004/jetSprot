@@ -19,6 +19,7 @@ import { User } from "@/types/User";
 import { useState } from "react";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/firebase";
+import searchUserBySports from "@/API/sport/getUserBySport";
 
 const Users = () => {
   const token = useSelector((state: RootState) => state.user.accessToken);
@@ -29,6 +30,7 @@ const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
   const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
 
   const foundUsers = async () => {
     try {
@@ -66,6 +68,10 @@ const Users = () => {
       console.log(error);
     }
   };
+
+  // const searchUserBySport = async () => {
+  //   const response = await searchUserBySports()
+  // }
 
   useEffect(() => {
     fetchUsers();

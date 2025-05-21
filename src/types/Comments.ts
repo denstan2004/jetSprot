@@ -9,15 +9,3 @@ export interface Comment {
   replies: [];
   is_liked: boolean;
 }
-
-// export interface Comment {
-//     id: number;
-//     content: string;
-
-//     created_at: string;
-//     likes: string;
-
-//     author_id: number;
-//     parent_comment_id: number;
-//     publication_id: number;
-// }

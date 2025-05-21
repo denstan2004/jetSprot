@@ -8,11 +8,13 @@ export const styles = StyleSheet.create({
 
   headerBackground: {
     paddingHorizontal: 10,
+    // backgroundColor: 'red'
   },
 
   headerTopRow: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   iconGroup: {
@@ -153,7 +155,7 @@ export const styles = StyleSheet.create({
   },
 
   statusText: {
-    flex:1,
+    flex: 1,
     color: "#FFFBE4",
     fontSize: 16,
     marginBottom: 15,
@@ -198,5 +200,106 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFFBE4",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+  },
+
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+  },
+  ratingText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFBE4",
+  },
+  bottomModalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  bottomModalContent: {
+    height: "55%",
+    backgroundColor: "#FFFBE4",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#5B3400",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalBody: {
+    marginTop: 10,
+  },
+  noReviews: {
+    fontSize: 14,
+    color: "#AC591A",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  reviewCard: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingVertical: 6,
+  },
+  reviewContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  reviewAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 12,
+  },
+  reviewTextContainer: {
+    flex: 1,
+  },
+  reviewUsername: {
+    fontWeight: "bold",
+    color: "#5B3400",
+  },
+  reviewText: {
+    color: "#5B3400",
+    fontSize: 16,
+  },
+  leftHeaderGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 20,
+  },
+  reportButton: {
+    backgroundColor: "rgb(254, 44, 44)",
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+
+  reportText: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "bold",
   },
 });

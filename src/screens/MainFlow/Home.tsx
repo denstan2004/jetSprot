@@ -25,12 +25,26 @@ export const Home = () => {
       initialRouteName="UserPage"
     >
       <Tab.Screen
-        name="UserPage"
-        component={UserPage}
+        name="Publication"
+        component={AllPublication}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
-              name={focused ? "account" : "account-outline"}
+              name={focused ? "ballot" : "ballot-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="SearchUser"
+        component={SearchUser}
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? "account-search" : "account-search-outline"}
               color={color}
               size={size}
             />
@@ -52,32 +66,6 @@ export const Home = () => {
         component={ChatsList}
       />
       <Tab.Screen
-        name="Publication"
-        component={AllPublication}
-        options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons
-              name={focused ? "ballot" : "ballot-outline"}
-              color={color}
-              size={size}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="SearchUser"
-        component={SearchUser}
-        options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons
-              name={focused ? "account-search" : "account-search-outline"}
-              color={color}
-              size={size}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
         options={{
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
@@ -90,6 +78,20 @@ export const Home = () => {
         }}
         name="Map"
         component={Map}
+      />
+
+      <Tab.Screen
+        name="UserPage"
+        component={UserPage}
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? "account" : "account-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
       />
     </Tab.Navigator>
   );

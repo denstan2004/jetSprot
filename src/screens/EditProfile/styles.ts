@@ -60,4 +60,12 @@ export const styles = StyleSheet.create({
     color: "#5B3400",
     fontWeight: "bold",
   },
+  profileImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 40,
+    backgroundColor: "#FFFBE4",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

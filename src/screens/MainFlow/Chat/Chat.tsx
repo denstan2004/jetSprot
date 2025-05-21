@@ -30,10 +30,15 @@ import Animated, {
   interpolateColor,
   withTiming,
 } from "react-native-reanimated";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import DeleteGroup from "@/components/DeleteGroup";
+import { Ionicons } from "@expo/vector-icons";
+import PopUp from "@/components/DeleteGroup";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import RemoveUserFromGroup from "@/components/RemoveUser";
+import getChatroom from "@/API/chat/getChatroom";
+import { Chatroom, Member } from "@/types/Chatroom";
+import updateRole from "@/API/chat/updateRole";
+import removeUsers from "@/API/chat/removeUsers";
+import AddUserToGroup from "@/components/AddUserToGroup";
+import addUsers from "@/API/chat/addUsers";
 
 interface ChatMessage {
   _id: string;
@@ -48,9 +53,9 @@ interface ChatMessage {
 type ChatScreenRouteProp = RouteProp<AuthStackParamList, "UserChat">;
 
 export const ChatScreen = () => {
-  const route = useRoute<ChatScreenRouteProp>();
   const ourUserId =
     useSelector((state: RootState) => state.user.userData?.id) || 1;
+  const route = useRoute<ChatScreenRouteProp>();
   const { chatId } = route.params;
   console.log("chatId", chatId);
   const { accessToken } = useSelector((state: RootState) => state.user);
@@ -63,20 +68,46 @@ export const ChatScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 
-
-  const [isRemoveUserFromGroupVisible, setIsRemoveUserFromGroupVisible] = useState(false);
+  const [isRemoveUserFromGroupVisible, setIsRemoveUserFromGroupVisible] =
+    useState(false);
   const [nameGroup, setNameGroup] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editedGroupName, setEditedGroupName] = useState(nameGroup);
   const [isDeleteGroupVisible, setIsDeleteGroupVisible] = useState(false);
-  const isAdmin = true;
-  const moder = false;
+  const [isUpdateRoleVisible, setIsUpdateRoleVisible] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserRole, setSelectedUserRole] = useState<string | null>(null);
 
-  // const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
+  const [chatroom, setChatroom] = useState<Chatroom | null>(null);
+  const [isAddUserToGroupVisible, setIsAddUserToGroupVisible] = useState(false);
+  const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
   // const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuAnimation = useSharedValue(0);
   const { width } = Dimensions.get("window");
+
+  const currentUserRole = chatroom?.members.find(
+    (member) => member.id.toString() === ourUserId.toString()
+  )?.role;
+
+  const isOwner = currentUserRole === "owner";
+  const isAdmin = currentUserRole === "admin";
+  const isMember = currentUserRole === "member";
+
+  const canRemoveUser = (member: Member) => {
+    if (isOwner) {
+      // Owner може видалити будь-кого
+      return true;
+    }
+
+    if (isAdmin) {
+      // Admin може видалити тільки member'а
+      return member.role === "member";
+    }
+
+    // Member нікого не може видалити
+    return false;
+  };
 
   const wsUrl = `${wsUrlApi}/chat/${chatId}/?token=${accessToken}`;
   const connectWebSocket = useCallback(() => {
@@ -152,8 +183,6 @@ export const ChatScreen = () => {
     }
   };
 
-  //TODO:
-
   const markRead = (messageId: string) => {
     if (ws) {
       ws.send(
@@ -176,39 +205,71 @@ export const ChatScreen = () => {
   const handleDeleteGroup = () => {
     setIsDeleteGroupVisible(true);
   };
-
+  const handleSaveGroupName = () => {
+    setNameGroup(editedGroupName);
+  };
   const handleEditGroupName = () => {
     setIsEditing(true);
   };
 
-  const handleSaveGroupName = () => {
-    setNameGroup(editedGroupName);
+  const fetchChatroom = async () => {
+    const response = await getChatroom(chatId.toString(), accessToken);
+    setChatroom(response);
+    // console.log("response", response);
   };
 
-
-  const removeUserFromGroup = () => {
-    setIsDeleteGroupVisible(true);
+  const handleAddUserToGroup = async (userIds: number[]) => {
+    const response = await addUsers(accessToken, chatId.toString(), userIds);
+    console.log("response", response);
+    fetchChatroom();
+    setIsAddUserToGroupVisible(false);
   };
 
+  useEffect(() => {
+    fetchChatroom();
+  }, []);
+
+  const handleUpdateRole = async (userId: number, role: string) => {
+    const response = await updateRole(
+      role,
+      chatId.toString(),
+      userId,
+      accessToken
+    );
+    console.log("response", response);
+    fetchChatroom();
+  };
+
+  const handleRemoveUserFromGroup = async (userId: number) => {
+    const response = await removeUsers(chatId.toString(), userId, accessToken);
+    // console.log("response", response);
+    fetchChatroom();
+  };
+
+  useEffect(() => {
+    const fetchProfilePictures = async () => {
+      const urls: Record<string, string> = {};
+      await Promise.all(
+        chatroom?.members.map(async (user) => {
+          if (user.pfp_url) {
+            try {
+              const url = await getDownloadURL(ref(storage, user.pfp_url));
+              // console.log("Fetched URL:", url);
+              urls[user.id.toString()] = url;
+            } catch (err) {
+              console.warn("Error loading image for", err);
+            }
+          }
+        }) || []
+      );
+      setPfpUrls(urls);
+      // console.log("Profile picture URLs:", urls);
+    };
+    fetchProfilePictures();
+  }, [chatroom]);
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isMyMessage = item.user._id !== ourUserId.toString();
-
-    // useEffect(() => {
-    //   const fetchPfpUrl = async () => {
-    //     if (item.user.pfp_url) {
-    //       try {
-    //         const storageRef = ref(storage, item.user.pfp_url);
-    //         const url = await getDownloadURL(storageRef);
-    //         setMediaUrl(url);
-    //       } catch (error) {
-    //         console.error("Failed to fetch avatar:", error);
-    //       }
-    //     }
-    //   };
-
-    //   fetchPfpUrl();
-    // }, [currentUser]);
 
     return (
       <TouchableOpacity
@@ -243,7 +304,7 @@ export const ChatScreen = () => {
   };
   const menuContentStyle = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(menuAnimation.value, [0, 1], [1, 0]),
+      opacity: interpolate(menuAnimation.value, [0, 1], [0, 1]),
     };
   });
   const menuStyle = useAnimatedStyle(() => {
@@ -253,305 +314,347 @@ export const ChatScreen = () => {
           translateX: interpolate(
             menuAnimation.value,
             [0, 1],
-            [0, width],
+            [width, 0],
             Extrapolate.CLAMP
           ),
         },
       ],
       backgroundColor: interpolateColor(
         menuAnimation.value,
-        [0, 1],
+        [1, 0],
         ["#FFFBE4", "#803511"]
       ),
     };
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={require("../../../assets/Basketball2.png")}
-        style={{ flex: 1 }}
-        resizeMode="cover"
-      >
-        onContentSizeChange
-        <View style={{ flex: 1, backgroundColor: "#FFFBE4AA" }}>
-          <View style={styles.topBar}>
-            <TouchableOpacity onPress={toggleMenu} style={styles.burgerButton}>
-              <View style={styles.burgerLine} />
-              <View style={styles.burgerLine} />
-              <View style={styles.burgerLine} />
-            </TouchableOpacity>
-          </View>
-
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-          >
-            <View style={{ flex: 1 }}>
-              <Animated.View style={[styles.menu, menuStyle]}>
-                <Animated.View style={[styles.menuContent, menuContentStyle]}>
-                  <View style={styles.menuHeader}>
-                    {isEditing ? (
-                      <TextInput
-                        style={[
-                          styles.menuHeaderText,
-                          {
-                            borderBottomWidth: 1,
-                            borderColor: "#803511",
-                            paddingVertical: 2,
-                          },
-                        ]}
-                        value={editedGroupName}
-                        onChangeText={setEditedGroupName}
-                        onBlur={handleSaveGroupName}
-                        autoFocus
-                      />
-                    ) : (
-                      <Text style={styles.menuHeaderText}>
-                        {editedGroupName}
-                      </Text>
-                    )}
-
-                    {isAdmin && (
-                      <View style={{ flexDirection: "row", gap: 10 }}>
-                        <TouchableOpacity onPress={handleDeleteGroup}>
-                          <Ionicons
-                            name="trash-outline"
-                            size={24}
-                            color="rgb(179, 10, 10)"
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleEditGroupName}>
-                          <Ionicons
-                            name="create-outline"
-                            size={24}
-                            color="rgb(179, 10, 10)"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.menuParticipants}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text style={styles.menuParticipantsText}>
-                        Group members
-                      </Text>
-                      {isAdmin && (
-                        <TouchableOpacity
-                          onPress={() => navigation.navigate("SearchUser")}
-                          style={styles.plusButton}
-                        >
-                          <Ionicons
-                            name="add"
-                            size={20}
-                            style={styles.plusButtonIcon}
-                          />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-
-                    <View style={styles.menuParticipantsList}>
-                      <ScrollView contentContainerStyle={{ gap: 10, flex: 1 }}>
-                        <View style={styles.menuParticipantsItem}>
-                          <Image
-                            source={require("../../../assets/Basketball2.png")}
-                            style={styles.avatar}
-                            resizeMode="cover"
-                          />
-                          <View style={{ flexDirection: "column" }}>
-                            <Text style={{ fontSize: 10, color: "#803511" }}>
-                              Author
-                            </Text>
-                            <Text style={{ fontSize: 16, color: "#803511" }}>
-                              Name
-                            </Text>
-                          </View>
-                          {isAdmin && (
-                            <View
-                              style={{
-                                flex: 1,
-                                gap: 5,
-                                flexDirection: "row",
-                                justifyContent: "flex-end",
-                              }}
-                            >
-                              <TouchableOpacity onPress={removeUserFromGroup}>
-                                <Text style={styles.iconsDelete}>
-                                  <Ionicons
-                                    name="person-remove"
-                                    size={20}
-                                    color="black"
-                                  />
-                                </Text>
-                              </TouchableOpacity>
-                              {/* <Ionicons name="medal-outline" size={20} color="gold" /> */}
-                              {/* <Ionicons name="swap-horizontal" size={20} color="black" /> */}
-                              {/* <TouchableOpacity>
-                                <Ionicons
-                                  name="arrow-up"
-                                  size={20}
-                                  color="green"
-                                />
-                                <Ionicons
-                                  name="arrow-down"
-                                  size={20}
-                                  color="orange"
-                                />
-                              </TouchableOpacity> */}
-                            </View>
-                          )}
-                        </View>
-
-                        <View style={styles.menuParticipantsItem}>
-                          <Image
-                            source={require("../../../assets/Basketball2.png")}
-                            style={styles.avatar}
-                            resizeMode="cover"
-                          />
-                          <View style={{ flexDirection: "column" }}>
-                            <Text style={{ fontSize: 10, color: "#803511" }}>
-                              Moder
-                            </Text>
-                            <Text style={{ fontSize: 16, color: "#803511" }}>
-                              Name
-                            </Text>
-                          </View>
-                          {isAdmin && (
-                            <TouchableOpacity
-                              style={{
-                                flex: 1,
-                                gap: 5,
-                                flexDirection: "row",
-                                justifyContent: "flex-end",
-                              }}
-                            >
-                              <Text style={styles.iconsDelete}>
-                                <Ionicons
-                                  name="person-remove"
-                                  size={20}
-                                  color="black"
-                                />
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-
-                        <View style={styles.menuParticipantsItem}>
-                          <Image
-                            source={require("../../../assets/Basketball2.png")}
-                            style={styles.avatar}
-                            resizeMode="cover"
-                          />
-                          <Text>Name</Text>
-                          {isAdmin && (
-                            <TouchableOpacity
-                              style={{
-                                flex: 1,
-                                gap: 5,
-                                flexDirection: "row",
-                                justifyContent: "flex-end",
-                              }}
-                            >
-                              <Text style={styles.iconsDelete}>
-                                <Ionicons
-                                  name="person-remove"
-                                  size={20}
-                                  color="black"
-                                />
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-
-                        <View style={styles.menuParticipantsItem}>
-                          <Image
-                            source={require("../../../assets/Basketball2.png")}
-                            style={styles.avatar}
-                            resizeMode="cover"
-                          />
-                          <Text>Name</Text>
-                          {isAdmin && (
-                            <TouchableOpacity
-                              style={{
-                                flex: 1,
-                                gap: 5,
-                                flexDirection: "row",
-                                justifyContent: "flex-end",
-                              }}
-                            >
-                              <Text style={styles.iconsDelete}>
-                                <Ionicons
-                                  name="person-remove"
-                                  size={20}
-                                  color="black"
-                                />
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      </ScrollView>
-                    </View>
-                  </View>
-                </Animated.View>
-              </Animated.View>
-
-              <View style={styles.messagesContainer}>
-                <FlatList
-                  ref={flatListRef}
-                  data={messages}
-                  renderItem={renderMessage}
-                  keyExtractor={(item) => item._id}
-                  onContentSizeChange={() =>
-                    flatListRef.current?.scrollToEnd({ animated: true })
-                  }
-                  onLayout={() =>
-                    flatListRef.current?.scrollToEnd({ animated: true })
-                  }
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={newMessage}
-                onChangeText={setNewMessage}
-                placeholder="Type a message..."
-                multiline
-              />
-              <TouchableOpacity
-                style={styles.sendButton}
-                onPress={sendMessage}
-                disabled={!newMessage.trim()}
-              >
-                <Text style={styles.sendButtonText}>Send</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.connectionStatus}>
-              <Text style={styles.connectionStatusText}>
-                {isConnected ? "Connected" : "Chat is not available"}
-              </Text>
-
-              {isDeleteGroupVisible && (
-                <DeleteGroup onClose={() => setIsDeleteGroupVisible(false)} />
-              )}
-              {isRemoveUserFromGroupVisible && (
-                <RemoveUserFromGroup onClose={() => setIsRemoveUserFromGroupVisible(false)} />
-              )}
-            </View>
-          </KeyboardAvoidingView>
+    <>
+      {isDeleteGroupVisible && (
+        <View
+          style={{
+            position: "absolute",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            width: "100%",
+            height: "100%",
+            zIndex: 1000,
+          }}
+        >
+          <PopUp
+            text="Are you sure you want to delete group?"
+            button1Text="Yes"
+            button2Text="No"
+            action1={() => {}}
+            title="Delete Group"
+            action2={() => {
+              setIsDeleteGroupVisible(false);
+            }}
+          />
         </View>
-      </ImageBackground>
-    </SafeAreaView>
+      )}
+
+      {isRemoveUserFromGroupVisible && (
+        <View
+          style={{
+            position: "absolute",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            width: "100%",
+            height: "100%",
+            zIndex: 1000,
+          }}
+        >
+          <PopUp
+            text="Are you sure you want to remove user from group?"
+            button1Text="Yes"
+            button2Text="No"
+            action1={() => {
+              if (selectedUserId !== null) {
+                handleRemoveUserFromGroup(selectedUserId);
+                setIsRemoveUserFromGroupVisible(false);
+              }
+            }}
+            title="Remove User from Group"
+            action2={() => {
+              setIsRemoveUserFromGroupVisible(false);
+            }}
+          />
+        </View>
+      )}
+
+      {isUpdateRoleVisible && (
+        <View
+          style={{
+            position: "absolute",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            width: "100%",
+            height: "100%",
+            zIndex: 1000,
+          }}
+        >
+          <PopUp
+            text="Are you sure you want to update role of user?"
+            button1Text="Yes"
+            button2Text="No"
+            action1={() => {
+              if (selectedUserId !== null && selectedUserRole !== null) {
+                handleUpdateRole(selectedUserId, selectedUserRole);
+                setIsUpdateRoleVisible(false);
+                fetchChatroom();
+              }
+            }}
+            title="Update Role"
+            action2={() => {
+              setIsUpdateRoleVisible(false);
+            }}
+            isEditRole={true}
+            setSelectedUserRole={setSelectedUserRole}
+            setSelectedUserId={setSelectedUserId}
+          />
+        </View>
+      )}
+
+      {isAddUserToGroupVisible && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "#FFFBE4",
+            zIndex: 999,
+          }}
+        >
+          <AddUserToGroup
+            onBack={() => setIsAddUserToGroupVisible(false)}
+            handleAddUserToGroup={handleAddUserToGroup}
+          />
+        </View>
+      )}
+
+      <SafeAreaView style={styles.container}>
+        <ImageBackground
+          source={require("../../../assets/Basketball2.png")}
+          style={{ flex: 1 }}
+          resizeMode="cover"
+        >
+          <View style={{ flex: 1, backgroundColor: "#FFFBE4AA" }}>
+            {chatroom?.is_group && (
+              <View style={styles.topBar}>
+                <TouchableOpacity
+                  onPress={toggleMenu}
+                  style={styles.burgerButton}
+                >
+                  <View style={styles.burgerLine} />
+                  <View style={styles.burgerLine} />
+                  <View style={styles.burgerLine} />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+            >
+              <View style={{ flex: 1 }}>
+                {chatroom?.is_group && (
+                  <Animated.View style={[styles.menu, menuStyle]}>
+                    <Animated.View
+                      style={[styles.menuContent, menuContentStyle]}
+                    >
+                      <View style={styles.menuHeader}>
+                        {isEditing ? (
+                          <TextInput
+                            style={[
+                              styles.menuHeaderText,
+                              {
+                                borderBottomWidth: 1,
+                                borderColor: "#803511",
+                                paddingVertical: 2,
+                              },
+                            ]}
+                            value={editedGroupName}
+                            onChangeText={setEditedGroupName}
+                            onBlur={handleSaveGroupName}
+                            autoFocus
+                          />
+                        ) : (
+                          <Text style={styles.menuHeaderText}>
+                            {chatroom?.name}
+                          </Text>
+                        )}
+                        <View style={{ flexDirection: "row", gap: 10 }}>
+                          {isOwner && (
+                            <TouchableOpacity onPress={handleDeleteGroup}>
+                              <Ionicons
+                                name="trash-outline"
+                                size={24}
+                                color="rgb(179, 10, 10)"
+                              />
+                            </TouchableOpacity>
+                          )}
+                          {(isAdmin || isOwner) && (
+                            <TouchableOpacity onPress={handleEditGroupName}>
+                              <Ionicons
+                                name="create-outline"
+                                size={24}
+                                color="rgb(179, 10, 10)"
+                              />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+
+                      <View style={styles.menuParticipants}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text style={styles.menuParticipantsText}>
+                            Group members
+                          </Text>
+                          {(isOwner || isAdmin) && (
+                            <TouchableOpacity
+                              onPress={() => setIsAddUserToGroupVisible(true)}
+                              style={styles.plusButton}
+                            >
+                              <Ionicons
+                                name="add"
+                                size={20}
+                                style={styles.plusButtonIcon}
+                              />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+
+                        <View style={styles.menuParticipantsList}>
+                          <ScrollView
+                            contentContainerStyle={{ gap: 10, flex: 1 }}
+                          >
+                            {chatroom?.members.map((member, index) => (
+                              <View
+                                key={index}
+                                style={styles.menuParticipantsItem}
+                              >
+                                <Image
+                                  source={{
+                                    uri: pfpUrls[member.id.toString()],
+                                  }}
+                                  style={styles.avatar}
+                                  resizeMode="cover"
+                                />
+                                <View style={{ flexDirection: "column" }}>
+                                  <Text
+                                    style={{ fontSize: 10, color: "#803511" }}
+                                  >
+                                    {member.role}
+                                  </Text>
+                                  <Text
+                                    style={{ fontSize: 16, color: "#803511" }}
+                                  >
+                                    {member.username}
+                                  </Text>
+                                </View>
+                                {(isOwner || isAdmin) && (
+                                  <View
+                                    style={{
+                                      flex: 1,
+                                      gap: 5,
+                                      flexDirection: "row",
+                                      justifyContent: "flex-end",
+                                    }}
+                                  >
+                                    {canRemoveUser(member) && (
+                                      <TouchableOpacity
+                                        onPress={() => {
+                                          setSelectedUserId(member.id);
+                                          setIsRemoveUserFromGroupVisible(true);
+                                        }}
+                                      >
+                                        <Ionicons
+                                          name="person-remove"
+                                          size={20}
+                                          color="black"
+                                        />
+                                      </TouchableOpacity>
+                                    )}
+
+                                    <TouchableOpacity
+                                      onPress={() => {
+                                        setSelectedUserId(member.id);
+                                        setSelectedUserRole(member.role);
+                                        setIsUpdateRoleVisible(true);
+                                      }}
+                                    >
+                                      <Ionicons
+                                        name="swap-vertical-outline"
+                                        size={20}
+                                        color="black"
+                                      />
+                                    </TouchableOpacity>
+                                  </View>
+                                )}
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      </View>
+                    </Animated.View>
+                  </Animated.View>
+                )}
+
+                <View style={styles.messagesContainer}>
+                  <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    renderItem={renderMessage}
+                    keyExtractor={(item) => item._id}
+                    onContentSizeChange={() =>
+                      flatListRef.current?.scrollToEnd({ animated: true })
+                    }
+                    onLayout={() =>
+                      flatListRef.current?.scrollToEnd({ animated: true })
+                    }
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={newMessage}
+                  onChangeText={setNewMessage}
+                  placeholder="Type a message..."
+                  multiline
+                />
+                <TouchableOpacity
+                  style={styles.sendButton}
+                  onPress={sendMessage}
+                  disabled={!newMessage.trim()}
+                >
+                  <Text style={styles.sendButtonText}>Send</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.connectionStatus}>
+                <Text style={styles.connectionStatusText}>
+                  {isConnected ? "Connected" : "Chat is not available"}
+                </Text>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
+        </ImageBackground>
+      </SafeAreaView>
+    </>
   );
 };
 

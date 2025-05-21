@@ -20,6 +20,7 @@ export const SignUp = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
@@ -33,6 +34,20 @@ export const SignUp = () => {
 
   const isValidateName = (name: string) => {
     return /^[A-Za-z]+$/.test(name);
+  };
+
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (!validateEmail(text)) {
+      setEmailError("Invalid email");
+    } else {
+      setEmailError(null);
+    }
   };
 
   const handleSignUp = async () => {
@@ -85,6 +100,7 @@ export const SignUp = () => {
               style={styles.input}
               value={name}
               onChangeText={setName}
+              maxLength={15}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -94,6 +110,7 @@ export const SignUp = () => {
               style={styles.input}
               value={firstName}
               onChangeText={setFirstName}
+              maxLength={10}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -103,6 +120,7 @@ export const SignUp = () => {
               style={styles.input}
               value={lastName}
               onChangeText={setLastName}
+              maxLength={10}
             />
           </View>
           {validNameError && (
@@ -115,7 +133,9 @@ export const SignUp = () => {
               placeholderTextColor={"white"}
               style={styles.input}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
+              maxLength={30}
+              keyboardType="email-address"
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -126,6 +146,7 @@ export const SignUp = () => {
               style={styles.input}
               value={password}
               onChangeText={setPassword}
+              maxLength={15}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -136,6 +157,7 @@ export const SignUp = () => {
               style={styles.input}
               value={repeatPassword}
               onChangeText={setRepeatPassword}
+              maxLength={15}
             />
           </View>
           {passwordError && (
@@ -143,10 +165,7 @@ export const SignUp = () => {
           )}
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button]}
-            onPress={handleSignUp}
-          >
+          <TouchableOpacity style={[styles.button]} onPress={handleSignUp}>
             <Text style={styles.buttonText}>Sign up</Text>
           </TouchableOpacity>
         </View>
