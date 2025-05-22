@@ -4,7 +4,8 @@ export interface Announcement {
     caption: string;
     description: string;
     created_at: string;
-    valid_until: string;
+    start_date: string;
+    end_date: string;
     required_amount: number;
     status: number;
     creator: number;

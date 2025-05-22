@@ -34,12 +34,13 @@ const AddAnnouncement = () => {
   const [description, setDescription] = useState("");
   const [requiredAmount, setRequiredAmount] = useState("");
   const [selectedSports, setSelectedSports] = useState<number[]>([]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [eventType, setEventType] = useState(EventType.announcement);
   const sel = useSelector((state: RootState) => state.user);
-  const [announcementId, setAnnouncementId] = useState<number | null>(null);
+  const isVerified = sel?.userData?.is_verified;
+  const isStaff = sel?.userData?.is_staff;
   const [location, setLocation] = useState({
     latitude: 50.450001,
     longitude: 30.523333,
@@ -63,6 +64,53 @@ const AddAnnouncement = () => {
     setShowLocationPicker(true);
   };
 
+  const renderEventTypeOptions = () => {
+    return (
+      <View style={styles.eventTypeContainer}>
+        <Text style={styles.label}>Event Type</Text>
+        <View style={styles.radioGroup}>
+          <TouchableOpacity
+            style={styles.radioOption}
+            onPress={() => setEventType(EventType.playerSearch)}
+          >
+            <View style={styles.radioButton}>
+              {eventType === EventType.playerSearch && (
+                <View style={styles.radioButtonSelected} />
+              )}
+            </View>
+            <Text style={styles.radioLabel}>Player Search</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.radioOption}
+            onPress={() => setEventType(EventType.announcement)}
+          >
+            <View style={styles.radioButton}>
+              {eventType === EventType.announcement && (
+                <View style={styles.radioButtonSelected} />
+              )}
+            </View>
+            <Text style={styles.radioLabel}>Announcement</Text>
+          </TouchableOpacity>
+
+          {(isVerified || isStaff) && (
+            <TouchableOpacity
+              style={styles.radioOption}
+              onPress={() => setEventType(EventType.permanent)}
+            >
+              <View style={styles.radioButton}>
+                {eventType === EventType.permanent && (
+                  <View style={styles.radioButtonSelected} />
+                )}
+              </View>
+              <Text style={styles.radioLabel}>Permanent</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
+
   const handleLocationSelect = async () => {
     try {
       if (selectedSports.length !== 0) {
@@ -72,7 +120,7 @@ const AddAnnouncement = () => {
             caption,
             start_date: startDate.toISOString(),
             end_date: endDate.toISOString(),
-            event_type: EventType.announcement,
+            event_type: eventType,
             required_amount: parseInt(requiredAmount),
             status: 1,
             description: description,
@@ -91,8 +139,9 @@ const AddAnnouncement = () => {
             },
             sel?.accessToken
           );
+          setShowLocationPicker(false);
+          navigation.goBack();
           console.log(markerResponse);
-          console.log(response);
         }
       }
     } catch (error) {
@@ -136,116 +185,121 @@ const AddAnnouncement = () => {
           <Text style={styles.title}>Create Announcement</Text>
         </View>
 
-        <View style={styles.content}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Caption</Text>
-            <TextInput
-              style={styles.input}
-              value={caption}
-              onChangeText={setCaption}
-              placeholder="Enter announcement caption"
-            />
-          </View>
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={true}
+          indicatorStyle="black"
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          <View style={styles.content}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Caption</Text>
+              <TextInput
+                style={styles.input}
+                value={caption}
+                onChangeText={setCaption}
+                placeholder="Enter announcement caption"
+              />
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Enter announcement description"
-              multiline
-              numberOfLines={4}
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Description</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Enter announcement description"
+                multiline
+                numberOfLines={4}
+              />
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Required Amount</Text>
-            <TextInput
-              style={styles.input}
-              value={requiredAmount}
-              onChangeText={setRequiredAmount}
-              placeholder="Enter number of people required"
-              keyboardType="numeric"
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Required Amount</Text>
+              <TextInput
+                style={styles.input}
+                value={requiredAmount}
+                onChangeText={setRequiredAmount}
+                placeholder="Enter number of people required"
+                keyboardType="numeric"
+              />
+            </View>
+            {eventType !== EventType.permanent && (
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Start Date</Text>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Start Date</Text>
+                <DateTimePicker
+                  minimumDate={new Date()}
+                  value={startDate}
+                  mode="datetime"
+                  style={{
+                    borderRadius: 17,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                  textColor="#ffffff"
+                  display="compact"
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      setStartDate(selectedDate);
+                    }
+                  }}
+                />
+                <Text style={styles.label}>End Date</Text>
+                <DateTimePicker
+                  value={endDate}
+                  mode="datetime"
+                  minimumDate={startDate}
+                  style={{
+                    borderRadius: 17,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                  textColor="#ffffff"
+                  display="compact"
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      setEndDate(selectedDate);
+                    }
+                  }}
+                />
+              </View>
+            )}
 
-            <DateTimePicker
-              minimumDate={new Date()}
-              value={startDate}
-              mode="datetime"
-              style={{
-                borderRadius: 17,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              textColor="#ffffff"
-              display="compact"
-              onChange={(event, selectedDate) => {
-                if (selectedDate) {
-                  setStartDate(selectedDate);
-                }
-              }}
-            />
-            <Text style={styles.label}>End Date</Text>
-            <DateTimePicker
-              value={endDate}
-              mode="datetime"
-              minimumDate={startDate}
-              style={{
-                borderRadius: 17,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              textColor="#ffffff"
-              display="compact"
-              onChange={(event, selectedDate) => {
-                if (selectedDate) {
-                  setEndDate(selectedDate);
-                }
-              }}
-            />
-          </View>
+            {renderEventTypeOptions()}
 
-          <View style={styles.sportsSection}>
-            <Text style={styles.label}>Sports</Text>
-            <ScrollView
-              showsVerticalScrollIndicator={true}
-              indicatorStyle="black"
-              contentContainerStyle={styles.sportsContainer}
-          
-          >
-              {sports.map((sport) => (
-                <TouchableOpacity
-                  key={sport.id}
-                  style={[
-                    styles.sportButton,
-                    selectedSports.includes(sport.id) && styles.selectedSport,
-                  ]}
-                  onPress={() => handleSportSelect(sport.id)}
-                >
-                  <Text
+            <View style={styles.sportsSection}>
+              <Text style={styles.label}>Sports</Text>
+              <View style={styles.sportsContainer}>
+                {sports.map((sport) => (
+                  <TouchableOpacity
+                    key={sport.id}
                     style={[
-                      styles.sportText,
-                      selectedSports.includes(sport.id) &&
-                        styles.selectedSportText,
+                      styles.sportButton,
+                      selectedSports.includes(sport.id) && styles.selectedSport,
                     ]}
+                    onPress={() => handleSportSelect(sport.id)}
                   >
-                    {sport.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                    <Text
+                      style={[
+                        styles.sportText,
+                        selectedSports.includes(sport.id) &&
+                          styles.selectedSportText,
+                      ]}
+                    >
+                      {sport.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
           </View>
-
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        </ScrollView>
+        <View style={{}}>
+          <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
             <Text style={styles.submitButtonText}>Create Announcement</Text>
           </TouchableOpacity>
         </View>
-
         <Modal
           visible={showLocationPicker}
           animationType="slide"
@@ -256,9 +310,6 @@ const AddAnnouncement = () => {
               <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => {
-                  if (announcementId) {
-                    deleteAnnouncement(announcementId, sel?.accessToken);
-                  }
                   setShowLocationPicker(false);
                 }}
               >
@@ -316,7 +367,7 @@ const AddAnnouncement = () => {
             </View>
 
             <TouchableOpacity
-              style={styles.submitButton}
+              style={styles.createButton}
               onPress={handleLocationSelect}
             >
               <Text style={styles.submitButtonText}>Confirm Location</Text>
@@ -350,8 +401,13 @@ const styles = StyleSheet.create({
     color: "rgb(151, 97, 27)",
     marginLeft: rem(16),
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  content: {
     padding: rem(16),
   },
   inputContainer: {
@@ -381,7 +437,6 @@ const styles = StyleSheet.create({
     padding: rem(12),
   },
   sportsSection: {
-    flex: 1,
     marginBottom: rem(16),
   },
   sportsContainer: {
@@ -407,7 +462,19 @@ const styles = StyleSheet.create({
   selectedSportText: {
     color: "white",
   },
+  createButton: {
+    width: "90%",
+    backgroundColor: "#AC591A",
+    padding: rem(16),
+    borderRadius: rem(20),
+    alignItems: "center",
+    alignSelf: "center",
+  },
   submitButton: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: "#AC591A",
     padding: rem(16),
     borderRadius: rem(20),
@@ -425,6 +492,36 @@ const styles = StyleSheet.create({
   locationInputs: {
     padding: rem(16),
     gap: rem(8),
+  },
+  eventTypeContainer: {
+    marginBottom: rem(16),
+  },
+  radioGroup: {
+    gap: rem(12),
+  },
+  radioOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: rem(8),
+  },
+  radioButton: {
+    width: rem(20),
+    height: rem(20),
+    borderRadius: rem(10),
+    borderWidth: 2,
+    borderColor: "#AC591A",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioButtonSelected: {
+    width: rem(12),
+    height: rem(12),
+    borderRadius: rem(6),
+    backgroundColor: "#AC591A",
+  },
+  radioLabel: {
+    fontSize: rem(16),
+    color: "#5B3400",
   },
 });
 

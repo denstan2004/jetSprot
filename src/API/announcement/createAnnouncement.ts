@@ -18,7 +18,6 @@ export enum EventType  {
     permanent = 2,
 } 
 export const createAnnouncement = async (announcement: CreateAnnouncementData, token: string) => {
-    console.log(announcement);
     const response = await axios.post(`${apiUrl}/announcement/`, announcement, {
         headers: {
             Authorization: `Bearer ${token}`,

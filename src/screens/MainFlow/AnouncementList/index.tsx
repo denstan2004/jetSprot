@@ -83,7 +83,13 @@ export const AnouncementList = () => {
         <View style={styles.detailRow}>
           <Ionicons name="calendar" size={20} color="#5B3400" />
           <Text style={styles.detailText}>
-            Valid until: {new Date(item.valid_until).toLocaleDateString()}
+            Begins: {new Date(item.start_date).toLocaleString()}
+          </Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Ionicons name="calendar" size={20} color="#5B3400" />
+          <Text style={styles.detailText}>
+            Ends: {new Date(item.end_date).toLocaleString()}
           </Text>
         </View>
       </View>

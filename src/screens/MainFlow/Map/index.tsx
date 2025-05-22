@@ -30,6 +30,10 @@ import Animated, {
 import { getSports, SportInterface } from "@/API/sport/getSports";
 import { rem } from "@/theme/units";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+import { getFillteredAnnouncement } from "@/API/announcement/getFillteredAnnouncement";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/redux/store";
+import { EventType } from "@/API/announcement/createAnnouncement";
 //TODO: adding marker as part of this screen
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
@@ -50,6 +54,13 @@ export const Map = () => {
   const menuAnimation = useSharedValue(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { width, height } = Dimensions.get("window");
+  const [filters, setFilters] = useState({
+    event_type: undefined as number | undefined,
+    status: undefined as number | undefined,
+    min_required_amount: undefined as number | undefined,
+  });
+  const [isFiltered, setIsFiltered] = useState(false);
+  const sel = useSelector((state: RootState) => state.user);
   const handleSportSelect = (sport: number) => {
     setSelectedSports((prev) =>
       prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
@@ -181,6 +192,174 @@ export const Map = () => {
       ),
     };
   });
+
+  const handleFilterApply = async () => {
+    if (!sel?.accessToken) return;
+
+    try {
+      const filterParams = {
+        ...filters,
+        sport_id: selectedSports.length > 0 ? selectedSports[0] : undefined,
+      };
+
+      const response = await getFillteredAnnouncement(
+        sel.accessToken,
+        filterParams
+      );
+      setFilterdMarkers(response.results);
+      setIsFiltered(true);
+    } catch (error) {
+      console.error("Error applying filters:", error);
+    }
+  };
+
+  const handleClearFilters = async () => {
+    setFilters({
+      event_type: undefined,
+      status: undefined,
+      min_required_amount: undefined,
+    });
+    setSelectedSports([]);
+    setIsFiltered(false);
+    const response = await getAllMarkers();
+    setMarkers(response.results);
+    setFilterdMarkers([]);
+  };
+
+  const renderFilterControls = () => (
+    <View style={styles.filterControls}>
+      <Text style={styles.filterTitle}>Filters</Text>
+
+      <View style={styles.filterSection}>
+        <Text style={styles.filterLabel}>Event Type</Text>
+        <View style={styles.filterOptions}>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              filters.event_type === EventType.playerSearch &&
+                styles.filterButtonActive,
+            ]}
+            onPress={() =>
+              setFilters((prev) => ({
+                ...prev,
+                event_type:
+                  prev.event_type === EventType.playerSearch
+                    ? undefined
+                    : EventType.playerSearch,
+              }))
+            }
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                filters.event_type === EventType.playerSearch &&
+                  styles.filterButtonTextActive,
+              ]}
+            >
+              Player Search
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              filters.event_type === EventType.announcement &&
+                styles.filterButtonActive,
+            ]}
+            onPress={() =>
+              setFilters((prev) => ({
+                ...prev,
+                event_type:
+                  prev.event_type === EventType.announcement
+                    ? undefined
+                    : EventType.announcement,
+              }))
+            }
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                filters.event_type === EventType.announcement &&
+                  styles.filterButtonTextActive,
+              ]}
+            >
+              Announcement
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.filterSection}>
+        <Text style={styles.filterLabel}>Required Amount</Text>
+        <View style={styles.filterOptions}>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              filters.min_required_amount === 1 && styles.filterButtonActive,
+            ]}
+            onPress={() =>
+              setFilters((prev) => ({
+                ...prev,
+                min_required_amount:
+                  prev.min_required_amount === 1 ? undefined : 1,
+              }))
+            }
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                filters.min_required_amount === 1 &&
+                  styles.filterButtonTextActive,
+              ]}
+            >
+              1+
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              filters.min_required_amount === 5 && styles.filterButtonActive,
+            ]}
+            onPress={() =>
+              setFilters((prev) => ({
+                ...prev,
+                min_required_amount:
+                  prev.min_required_amount === 5 ? undefined : 5,
+              }))
+            }
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                filters.min_required_amount === 5 &&
+                  styles.filterButtonTextActive,
+              ]}
+            >
+              5+
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.filterActions}>
+        <TouchableOpacity
+          style={styles.clearButton}
+          onPress={handleClearFilters}
+        >
+          <Text style={styles.clearButtonText}>Clear All</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.applyButton}
+          onPress={handleFilterApply}
+        >
+          <Text style={styles.applyButtonText}>Apply Filters</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <>
       <MapView
@@ -252,7 +431,8 @@ export const Map = () => {
         <Ionicons name="add" size={24} color="#AC591A" />
       </TouchableOpacity>
       <Animated.View style={[styles.menu, menuStyle]}>
-        <ScrollView showsHorizontalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={true}>
+          {renderFilterControls()}
           <View style={styles.sportsContainer}>
             {sports.map((sport) => (
               <TouchableOpacity
@@ -502,5 +682,71 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-Bold",
     fontWeight: "bold",
     color: "#803511",
+  },
+  filterControls: {
+    padding: rem(16),
+    gap: rem(16),
+  },
+  filterTitle: {
+    fontSize: rem(18),
+    fontWeight: "bold",
+    color: "#803511",
+    marginBottom: rem(8),
+  },
+  filterSection: {
+    gap: rem(8),
+  },
+  filterLabel: {
+    fontSize: rem(16),
+    color: "#5B3400",
+    fontWeight: "500",
+  },
+  filterOptions: {
+    flexDirection: "row",
+    gap: rem(8),
+  },
+  filterButton: {
+    paddingHorizontal: rem(12),
+    paddingVertical: rem(6),
+    borderRadius: rem(16),
+    backgroundColor: "rgba(213, 208, 169, 0.51)",
+  },
+  filterButtonActive: {
+    backgroundColor: "#803511",
+  },
+  filterButtonText: {
+    color: "#803511",
+    fontWeight: "500",
+  },
+  filterButtonTextActive: {
+    color: "white",
+  },
+  filterActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: rem(8),
+    marginTop: rem(8),
+  },
+  clearButton: {
+    flex: 1,
+    padding: rem(12),
+    borderRadius: rem(16),
+    backgroundColor: "rgba(213, 208, 169, 0.51)",
+    alignItems: "center",
+  },
+  clearButtonText: {
+    color: "#803511",
+    fontWeight: "500",
+  },
+  applyButton: {
+    flex: 1,
+    padding: rem(12),
+    borderRadius: rem(16),
+    backgroundColor: "#803511",
+    alignItems: "center",
+  },
+  applyButtonText: {
+    color: "white",
+    fontWeight: "500",
   },
 });

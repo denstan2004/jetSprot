@@ -1,6 +1,6 @@
 import { RootState } from "@/store/redux/store";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -12,9 +12,11 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
+  FlatList,
 } from "react-native";
 import { useSelector } from "react-redux";
-import { Post as PostInterface } from "@/types/Post";
+import { Post as PostInterface, Media } from "@/types/Post";
 import { User } from "@/types/User";
 import { Ionicons } from "@expo/vector-icons";
 import { storage } from "@/firebase";
@@ -43,6 +45,8 @@ const Post = ({ post }: PostProps) => {
   // console.log(access)
   const [isLiked, setIsLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
@@ -109,7 +113,7 @@ const Post = ({ post }: PostProps) => {
     };
 
     fetchPfpUrl();
-  }, [post.media]);
+  }, [post.media_files]);
 
   const addComment = async () => {
     try {
@@ -192,6 +196,54 @@ const Post = ({ post }: PostProps) => {
     }
   };
 
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const viewSize = event.nativeEvent.layoutMeasurement.width;
+    const selectedIndex = Math.floor(contentOffset / viewSize);
+    setCurrentMediaIndex(selectedIndex);
+  };
+
+  const renderMediaItem = (item: Media, index: number) => {
+    return (
+      <View key={index} style={styles.mediaContainer}>
+        {item.media_url.endsWith(".mp4") ? (
+          <Video
+            source={{ uri: item.media_url }}
+            style={styles.media}
+            resizeMode={ResizeMode.COVER}
+            useNativeControls
+            shouldPlay={false}
+            isLooping
+          />
+        ) : (
+          <Image
+            source={{ uri: item.media_url }}
+            style={styles.media}
+            resizeMode="cover"
+          />
+        )}
+      </View>
+    );
+  };
+
+  const renderPaginationDots = () => {
+    if (!post.media_files || post.media_files.length <= 1) return null;
+
+    return (
+      <View style={styles.paginationContainer}>
+        {post.media_files.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.paginationDot,
+              index === currentMediaIndex && styles.paginationDotActive,
+            ]}
+          />
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View key={post.id} style={styles.postCard}>
       <View style={styles.header}>
@@ -210,24 +262,21 @@ const Post = ({ post }: PostProps) => {
       <Text style={styles.caption}>{post.caption}</Text>
       <Text style={styles.description}>{post.description}</Text>
 
-      {post.media && (
-        <View style={styles.mediaContainer}>
-          {post.media.endsWith(".mp4") ? (
-            <Video
-              source={{ uri: post.media }}
-              style={styles.media}
-              resizeMode={ResizeMode.COVER}
-              useNativeControls
-              shouldPlay={false}
-              isLooping
-            />
-          ) : (
-            <Image
-              source={{ uri: post.media }}
-              style={styles.media}
-              resizeMode="cover"
-            />
-          )}
+      {post.media_files && post.media_files.length > 0 && (
+        <View style={styles.mediaWrapper}>
+          <ScrollView
+            ref={scrollViewRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleScroll}
+            style={styles.scrollView}
+          >
+            {post.media_files.map((item, index) =>
+              renderMediaItem(item, index)
+            )}
+          </ScrollView>
+          {renderPaginationDots()}
         </View>
       )}
 
@@ -357,7 +406,7 @@ export default Post;
 
 const styles = StyleSheet.create({
   postCard: {
-    padding: 16,
+    height: 400,
     borderRadius: 16,
     marginBottom: 16,
     shadowColor: "#000",
@@ -396,14 +445,23 @@ const styles = StyleSheet.create({
     color: "#5B3400",
     marginBottom: 12,
   },
-  mediaContainer: {
+  mediaWrapper: {
+    position: "relative",
+    height: 300,
     marginBottom: 12,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  mediaContainer: {
+    width: Dimensions.get("window").width - 40,
+    height: 300,
     borderRadius: 16,
     overflow: "hidden",
   },
   media: {
     width: "100%",
-    height: 250,
+    height: "100%",
     borderRadius: 16,
   },
   footer: {
@@ -529,5 +587,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 10,
+  },
+  paginationContainer: {
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    marginHorizontal: 4,
+  },
+  paginationDotActive: {
+    backgroundColor: "#AC591A",
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
 });

@@ -9,11 +9,14 @@ interface MarkerRequestInterface {
   results: Post[];
 }
 
-export const getUserPosts = async (userId: string) => {
+export const getUserPosts = async (userId: string,token: string) => {
   try {
-    const response = await axios.get<Post[]>(
-      `${apiUrl}/user/${userId}/publications/`
-    );
+    console.log(userId);
+    const response = await axios.get<Post[]>(`${apiUrl}/user/${userId}/publications/`,{
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching user posts:", error);

@@ -10,7 +10,6 @@ interface CreateMarkerData {
 }
 
 export const createMarker = async (data: CreateMarkerData, token: string) => {
-  console.log(data);
   try {
     const response = await axios.post(`${apiUrl}/marker/`, data, {
       headers: {

@@ -55,9 +55,9 @@ export const UserPage = () => {
   const route = useRoute<UserRouteProp>();
   const userId =
     route.params?.userId ||
-    useSelector((state: RootState) => state.user.userData?.id.toString()); // user id
-  const sel = useSelector((state: RootState) => state.user.userData); // current user
-  const access = useSelector((state: RootState) => state.user.accessToken);
+    useSelector((state: RootState) => state.user.userData?.id.toString());
+  const sel = useSelector((state: RootState) => state.user.userData);
+  const accessToken = useSelector((state: RootState) => state.user.accessToken);
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const [followers, setFollowers] = useState<User[]>([]);
@@ -246,7 +246,8 @@ export const UserPage = () => {
     const fetchPosts = async () => {
       if (userId) {
         try {
-          const response = await getPostUserApi(userId);
+          const response = await getPostUserApi(userId, accessToken);
+          console.log(response.map((post) => post.media_files));
           setPosts(response || []);
         } catch (error) {
           console.error("Error fetching posts:", error);
