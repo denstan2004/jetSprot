@@ -39,6 +39,7 @@ export const EditProfile = () => {
     last_name: "",
     date_of_birth: "",
     pfp_url: "",
+
   });
 
   const pickMedia = async (type: "photo" | "video") => {
@@ -62,13 +63,13 @@ export const EditProfile = () => {
 
     try {
       const response = await uploadPFP({ pfp }, token);
-      // console.log(response);
+      console.log(response.firebase_url);
       const updatedUserPFP = {
         ...userData,
         pfp_url: response.firebase_url,
       };
       // console.log(userData)
-      // dispatch(updateUser({...userData, pfp_url: response.firebase_url}));
+      dispatch(updateUser({...userData, pfp_url: response.firebase_url }));
       setUserData(updatedUserPFP);
       
       setPfp(response.firebase_url);

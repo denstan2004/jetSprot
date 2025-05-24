@@ -1,9 +1,9 @@
 import { apiUrl } from "@/API/apiUrl";
 import axios from "axios";
 
-const rejectRequest = async (token: string, userId: string) => {
+const rejectRequest = async (token: string, Id: string) => {
   const response = await axios.post(
-    `${apiUrl}/moderation/verification/${userId}/reject/`,
+    `${apiUrl}/moderation/verification/${Id}/reject/`,
     {},
     {
       headers: {

@@ -1,7 +1,6 @@
 export interface User {
   id: number;
   is_staff: boolean;
-  is_verified: boolean;
   last_login: null;
   username: string;
   first_name: string;
@@ -10,4 +9,9 @@ export interface User {
   birth_date: string;
   pfp_url: string;
   rating: number;
+  country: string;
+  city: string;
+  account_status: string;
+  account_type: string;
+  is_verified?: boolean;
 }

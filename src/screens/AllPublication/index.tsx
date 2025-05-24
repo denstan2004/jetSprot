@@ -7,16 +7,37 @@ import {
 } from "react-native";
 import { styles } from "./style";
 import allPublication from "@/API/publication/allPublication";
+import getRecommendations from "@/API/publication/getRecommendations";
 import { useEffect, useState } from "react";
 import { Post as PostInterface } from "@/types/Post";
 import Post from "@/components/Post";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/redux/store";
 const AllPublication = () => {
   const [posts, setPosts] = useState<PostInterface[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { accessToken } = useSelector((state: RootState) => state.user);
 
-  const fetchAllPublication = async () => {
+  // const fetchAllPublication = async () => {
+  //   try {
+  //     const response = await allPublication();
+  //     if (Array.isArray(response)) {
+  //       setPosts(response);
+  //     } else {
+  //       console.error("Invalid response format:", response);
+  //       setPosts([]);
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching publications:", err);
+  //     setPosts([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchRecommendations = async () => {
     try {
-      const response = await allPublication();
+      const response = await getRecommendations(accessToken);
       if (Array.isArray(response)) {
         setPosts(response);
       } else {
@@ -24,7 +45,7 @@ const AllPublication = () => {
         setPosts([]);
       }
     } catch (err) {
-      console.error("Error fetching publications:", err);
+      console.error("Error fetching recommendations:", err);
       setPosts([]);
     } finally {
       setLoading(false);
@@ -32,7 +53,7 @@ const AllPublication = () => {
   };
 
   useEffect(() => {
-    fetchAllPublication();
+    fetchRecommendations();
   }, []);
 
   return (

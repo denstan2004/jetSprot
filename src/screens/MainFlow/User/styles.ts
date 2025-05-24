@@ -74,10 +74,12 @@ export const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
 
-  addIcon: {
-    fontSize: 18,
-    color: "#FFFBE4",
-    fontWeight: "bold",
+  verificationIcon: {
+    position: "absolute",
+    bottom: 5,
+    right: 2,
+    fontSize: 20,
+    color: "rgb(231, 124, 2)",
   },
 
   username: {
@@ -291,15 +293,7 @@ export const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   reportButton: {
-    backgroundColor: "rgb(254, 44, 44)",
     paddingVertical: 4,
     paddingHorizontal: 12,
-    borderRadius: 16,
-  },
-
-  reportText: {
-    color: "white",
-    fontSize: 13,
-    fontWeight: "bold",
   },
 });

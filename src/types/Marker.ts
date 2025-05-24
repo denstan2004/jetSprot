@@ -15,4 +15,6 @@ export interface Marker {
     valid_until: string;
     announcement: number;
     sports: SportInterface[];
+    status: number;
+    event_type: number;
 }

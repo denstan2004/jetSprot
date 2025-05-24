@@ -163,6 +163,7 @@ const CreateGroupChat = ({ onBack }: { onBack: () => void }) => {
             userId={user.id.toString()}
             onCardPress={() => toggleUserSelection(user)}
             isSelected={!!selectedUsers.find((u) => u.id === user.id)}
+            isVerified={user.is_verified || false}
           />
         ))}
       </ScrollView>

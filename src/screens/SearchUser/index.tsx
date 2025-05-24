@@ -131,6 +131,7 @@ const Users = () => {
             onCardPress={() =>
               navigation.navigate("User", { userId: user.id.toString() })
             }
+            isVerified={user.is_verified || false}
           />
         ))}
       </ScrollView>

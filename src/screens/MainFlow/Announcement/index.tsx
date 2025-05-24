@@ -5,13 +5,27 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  TextInput,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Announcement as AnnouncementType } from "@/types/Announcement";
 import { Ionicons } from "@expo/vector-icons";
 import { rem } from "@/theme/units";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
-
+// import getComment from "@/API/announcement/comments/getComment";
+import { useEffect } from "react";
+import { useState } from "react";
+import { AnnouncementComment } from "@/types/AnnouncmentComment";
+import getAnnouncmentComment from "@/API/announcement/comments/getAnnouncmentComment";
+import addComment from "@/API/announcement/comments/addComent";
+import { RootState } from "@/store/redux/store";
+import { useSelector } from "react-redux";
+import deleteComment from "@/API/announcement/comments/deleteComment";
+import retractComment from "@/API/announcement/comments/retractComment";
+import likeComment from "@/API/announcement/comments/likeComment";
 interface Sport {
   id: number;
   name: string;
@@ -21,6 +35,66 @@ export const Announcement = () => {
   const route = useRoute<RouteProp<AuthStackParamList, "Announcement">>();
   const navigation = useNavigation();
   const { announcement } = route.params;
+  const { accessToken } = useSelector((state: RootState) => state.user);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState<AnnouncementComment[]>([]);
+  const [commentId, setCommentId] = useState<string[]>([]);
+
+  const getComments = async () => {
+    try {
+      const response = await getAnnouncmentComment(announcement.id.toString());
+      // console.log("API response for comments:", response);
+      setComments(response || []);
+      // setCommentId(response.map((comment) => comment.is_liked.toString()));
+      console.log("commentId:", commentId);
+    } catch (error) {
+      console.error("Error fetching comments", error);
+    }
+  };
+  useEffect(() => {
+    getComments();
+  }, []);
+
+  const handleCommentSubmit = async () => {
+    try {
+      const response = await addComment(comment, announcement.id, accessToken);
+      setComment("");
+      getComments();
+    } catch (error) {
+      console.error("Error submitting comment", error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    console.log("Deleting comment with ID:", commentId);
+    try {
+      const response = await deleteComment(commentId, accessToken);
+      getComments();
+    } catch (error) {
+      console.error("Error deleting comment", error);
+    }
+  };
+
+  // const toggleLikePost = async (commentId: number) => {
+  //   try {
+  //     if (isLiked) {
+  //       const res = await retractComment(commentId.toString(), accessToken);
+  //       console.log("RetractLike res:", res);
+  //       setIsLiked(false);
+  //       setLikesCount((prev) => prev - 1);
+  //     } else {
+  //       const res = await likeComment(commentId.toString(), accessToken);
+  //       console.log("PostLike res:", res);
+  //       setIsLiked(true);
+  //       setLikesCount((prev) => prev + 1);
+  //     }
+  //   } catch (err) {
+  //     console.log("Like toggle error:", err);
+  //   }
+  // };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFBE4" }}>
@@ -36,13 +110,14 @@ export const Announcement = () => {
         <View style={styles.card}>
           <View style={styles.header}>
             <View style={styles.sportsContainer}>
-              {announcement.sports.map((sport: Sport | string, index) => (
-                <View key={index} style={styles.sportTag}>
-                  <Text style={styles.sportText}>
-                    {typeof sport === "object" ? sport.name : sport}
-                  </Text>
-                </View>
-              ))}
+              {Array.isArray(announcement?.sports) &&
+                announcement.sports.map((sport: any, index) => (
+                  <View key={sport.id ?? index} style={styles.sportTag}>
+                    <Text style={styles.sportText}>
+                      {typeof sport === "string" ? sport : sport.name}
+                    </Text>
+                  </View>
+                ))}
             </View>
             <View style={styles.statusContainer}>
               <Ionicons
@@ -70,7 +145,7 @@ export const Announcement = () => {
               <Ionicons name="calendar" size={20} color="#5B3400" />
               <Text style={styles.detailText}>
                 Valid until:{" "}
-                {new Date(announcement.valid_until).toLocaleDateString()}
+                {new Date(announcement.end_date).toLocaleDateString()}
               </Text>
             </View>
             <View style={styles.detailRow}>
@@ -83,6 +158,66 @@ export const Announcement = () => {
           </View>
         </View>
       </ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.commentsSection}>
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={{ padding: 10 }}
+            ListEmptyComponent={
+              <Text style={styles.noCommentsText}>No comments yet.</Text>
+            }
+            renderItem={({ item }) => (
+              <View style={styles.comment}>
+                <View style={styles.commentContent}>
+                  <Text style={styles.detailText}>
+                    Comment by: {item.author_username}
+                  </Text>
+                  <Text style={styles.detailText}>Comment: {item.content}</Text>
+                  <Text style={styles.detailText}>
+                    Created at: {new Date(item.created_at).toLocaleDateString()}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.deleteIcon}
+                  onPress={() => handleDeleteComment(item.id.toString())}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={20}
+                    color="rgb(179, 10, 10)"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => {}}>
+                  <Ionicons
+                    name={item.is_liked ? "heart" : "heart-outline"}
+                    size={20}
+                    color="#AC591A"
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+          <View style={styles.commentInputContainer}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a comment..."
+              value={comment}
+              onChangeText={setComment}
+              placeholderTextColor="#AC591A"
+            />
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleCommentSubmit}
+            >
+              <Ionicons name="send" size={24} color="#5B3400" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -162,5 +297,54 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: rem(14),
     color: "#5B3400",
+  },
+  commentsSection: {
+    flex: 1,
+    justifyContent: "space-between",
+    backgroundColor: "#FFFBE4",
+  },
+  comment: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: rem(12),
+    borderRadius: rem(8),
+    borderWidth: 1,
+    borderColor: "#5B3400",
+    marginBottom: rem(10),
+    gap: rem(10),
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: rem(10),
+    paddingVertical: rem(8),
+    backgroundColor: "#FFFBE4",
+    borderTopWidth: 1,
+    borderColor: "#AC591A",
+  },
+  commentInput: {
+    flex: 1,
+    padding: rem(10),
+    borderRadius: rem(8),
+    borderWidth: 1,
+    borderColor: "#AC591A",
+    color: "#5B3400",
+  },
+  sendButton: {
+    padding: rem(8),
+    borderRadius: rem(8),
+  },
+  noCommentsText: {
+    color: "#AC591A",
+    textAlign: "center",
+    paddingVertical: rem(10),
+  },
+  deleteIcon: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: rem(8),
   },
 });

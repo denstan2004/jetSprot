@@ -121,7 +121,7 @@ export const Map = () => {
     React.useCallback(() => {
       const fetchMarkers = async () => {
         const response = await getAllMarkers();
-        setMarkers(response.results);
+        setMarkers(response.results.filter((e) => e.status !== 0));
         updateMapKey();
       };
       fetchMarkers();

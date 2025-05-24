@@ -1,9 +1,9 @@
 import axios from "axios";
 import { apiUrl } from "@/API/apiUrl";
 
-const acceptRequest = async (token: string, userId: string) => {
+const acceptRequest = async (token: string, Id: string) => {
   const response = await axios.post(
-    `${apiUrl}/moderation/verification/${userId}/accept/`,
+    `${apiUrl}/moderation/verification/${Id}/accept/`,
     {},
     {
       headers: {

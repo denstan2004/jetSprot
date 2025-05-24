@@ -19,6 +19,8 @@ import { getDownloadURL } from "firebase/storage";
 import { ref } from "firebase/storage";
 import { storage } from "@/firebase";
 import getAllRequest from "@/API/MODERATION/userVerification/getAllRequest";
+import acceptRequest from "@/API/MODERATION/userVerification/aceptRequest";
+import rejectRequest from "@/API/MODERATION/userVerification/rejectRequest";
 
 const BannedUser = () => {
   const token = useSelector((state: RootState) => state.user.accessToken);
@@ -56,6 +58,18 @@ const BannedUser = () => {
     searchVerification();
   }, []);
 
+  const handleAcceptVerification = async (Id: string) => {
+    const response = await acceptRequest(token, Id);
+    console.log("Accept verification API response:", response);
+    searchVerification();
+  };
+
+  const handleRejectVerification = async (Id: string) => {
+    const response = await rejectRequest(token, Id);
+    console.log("Reject verification API response:", response);
+    searchVerification();
+  };
+
   return (
     <SafeAreaView>
       <ScrollView style={styles.modalBody}>
@@ -68,7 +82,7 @@ const BannedUser = () => {
               <View style={styles.reviewContent}>
                 <TouchableOpacity
                   onPress={() =>
-                    handleNavigateToUser(verification.id.toString())
+                    handleNavigateToUser(verification.user?.toString())
                   }
                 >
                   <Image
@@ -87,18 +101,32 @@ const BannedUser = () => {
                   <Text style={styles.reviewText}>
                     Status: {verification.status}
                   </Text>
-                  {/* <View style={styles.actionsRow}>
+                  <View style={styles.actionsRow}>
                     <TouchableOpacity
-                      onPress={() => handleVerifyUser(verification.id.toString())}
+                      onPress={() =>
+                        handleAcceptVerification(verification.id.toString())
+                      }
                       style={styles.iconButton}
                     >
-                      <MaterialCommunityIcons
-                        name="account-lock-open-outline"
+                      <Ionicons
+                        name="checkmark-circle-outline"
                         size={24}
-                        color="black"
+                        color="green"
                       />
                     </TouchableOpacity>
-                  </View> */}
+                    <TouchableOpacity
+                      onPress={() =>
+                        handleRejectVerification(verification.id.toString())
+                      }
+                      style={styles.iconButton}
+                    >
+                      <Ionicons
+                        name="close-circle-outline"
+                        size={24}
+                        color="orange"
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </View>

@@ -9,10 +9,8 @@ import {
   ScrollView,
   Image,
   Animated,
-  TextInput,
-  KeyboardAvoidingView,
 } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { styles } from "./styles";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
@@ -38,7 +36,6 @@ import follow from "@/API/user/Follows/follow";
 import unFollow from "@/API/user/Follows/unFollow";
 import usersSporst from "@/API/sport/user'sSprosts";
 import { Sport } from "@/types/Sport";
-import { AirbnbRating, Rating } from "react-native-ratings";
 import RatingPopup from "@/components/RatingPopup";
 import getReviewBy2IDs from "@/API/review/By2IDs";
 import { Review } from "@/types/Review";
@@ -88,6 +85,7 @@ export const UserPage = () => {
   const hasUserReview =
     !!userReview && userReview.creator?.toString() === sel?.id?.toString();
 
+  // navigate
   const handleNavigateToFolowers = () => {
     navigation.navigate("ListUsers", { followers });
   };
@@ -128,14 +126,14 @@ export const UserPage = () => {
   }, []);
 
   const handleCreateReview = async (rating: number, review: string) => {
-    const response = await createReview(access, Number(userId), rating, review);
+    const response = await createReview(accessToken, Number(userId), rating, review);
     console.log(response);
     setUserReview(response);
     setRatingVisible(false);
   };
 
   const handleDeleteReview = async (reviewId: string) => {
-    const response = await deleteReview(reviewId, access);
+    const response = await deleteReview(reviewId, accessToken);
     console.log(response);
     setUserReview(null);
     await getReview();
@@ -144,7 +142,7 @@ export const UserPage = () => {
   const handleUpdateRating = async (rating: number, description: string) => {
     const response = await changeReview(
       // we do change but not create
-      access,
+      accessToken,
       userReview?.id.toString() || "",
       rating,
       description
@@ -162,9 +160,9 @@ export const UserPage = () => {
   // };
 
   const handleReport = async (report: string, selectedReason: string) => {
-    console.log(access, Number(userId), selectedReason, report);
+    console.log(accessToken, Number(userId), selectedReason, report);
     const response = await createReport(
-      access,
+      accessToken,
       Number(userId),
       selectedReason,
       report
@@ -326,7 +324,7 @@ export const UserPage = () => {
       }
 
       if (isFollowing) {
-        const response = await unFollow(access, userId);
+        const response = await unFollow(accessToken, userId);
         console.log("Unfollowed:", response);
 
         const updatedFollowers = await getFollowersCount();
@@ -335,7 +333,7 @@ export const UserPage = () => {
         const updatedFollows = await getFollowsCount();
         setFollows(updatedFollows || []);
       } else {
-        const response = await follow(access, userId);
+        const response = await follow(accessToken, userId);
         console.log("Followed:", response);
 
         const updatedFollowers = await getFollowersCount();
@@ -345,7 +343,7 @@ export const UserPage = () => {
         setFollows(updatedFollows || []);
       }
     } catch (err) {
-      // console.log("Follow/unfollow error:", err);
+      console.log("Follow/unfollow error:", err);
     }
   };
 
@@ -387,7 +385,6 @@ export const UserPage = () => {
           />
         </View>
       )}
-
       {isReportVisible && (
         <ReportPopup
           onSubmit={handleReport}
@@ -396,7 +393,6 @@ export const UserPage = () => {
           title="Report description:"
         />
       )}
-
       <SafeAreaView style={styles.container}>
         {hasMissingInfo() && (
           <TouchableOpacity
@@ -417,7 +413,7 @@ export const UserPage = () => {
                 style={styles.reportButton}
                 onPress={() => setReportVisible(true)}
               >
-                <Text style={styles.reportText}>Report</Text>
+                <MaterialIcons name="report" size={24} color="white" />
               </TouchableOpacity>
             )}
           </View>
@@ -562,9 +558,12 @@ export const UserPage = () => {
                     source={{ uri: mediaUrl || "" }}
                     style={styles.profileImage}
                   />
-                  {/* {userId === sel?.id.toString() && (
-                  <Text style={styles.addIcon}>+</Text>
-                )} */}
+                  {currentUser?.is_verified && (
+                    <MaterialCommunityIcons
+                      style={styles.verificationIcon}
+                      name="check-decagram"
+                    />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

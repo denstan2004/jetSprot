@@ -66,7 +66,11 @@ export function AuthNavigator() {
 
       <AuthStack.Screen options={screenOptions} name="Home" component={Home} />
 
-      <AuthStack.Screen options={screenOptions} name="Admin" component={Admin} />
+      <AuthStack.Screen
+        options={screenOptions}
+        name="Admin"
+        component={Admin}
+      />
 
       <AuthStack.Screen
         options={screenOptions}

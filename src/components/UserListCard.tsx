@@ -2,7 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
-
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 interface UserCardProps {
   username: string;
   first_name: string;
@@ -13,6 +13,7 @@ interface UserCardProps {
   onCardPress?: () => void;    
   onAvatarPress?: () => void;
   isSelected: boolean;
+  isVerified: boolean;
 }
 
 const UserCard = ({
@@ -25,6 +26,7 @@ const UserCard = ({
   onCardPress,
   onAvatarPress,
   isSelected,
+  isVerified,
 }: UserCardProps) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
@@ -34,6 +36,12 @@ const UserCard = ({
     <TouchableOpacity style={styles.card} onPress={onCardPress}>
       <TouchableOpacity onPress={() => navigation.navigate("User", { userId })}>
         <Image source={{ uri: pfpUrl }} style={styles.profileImage} />
+        {isVerified && (
+          <MaterialCommunityIcons
+            style={styles.verificationIcon}
+            name="check-decagram"
+          />
+        )}
       </TouchableOpacity>
       <View style={styles.textContainer}>
         <Text style={styles.username}>{username}</Text>
@@ -80,6 +88,13 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 12,
     color: "#FF0000",
+  },
+  verificationIcon: {
+    position: "absolute",
+    bottom: 2,
+    right: 15,
+    fontSize: 20,
+    color: "rgb(177, 212, 255)",
   },
 });
 
