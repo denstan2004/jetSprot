@@ -36,20 +36,18 @@ export const Announcement = () => {
   const navigation = useNavigation();
   const { announcement } = route.params;
   const { accessToken } = useSelector((state: RootState) => state.user);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
 
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<AnnouncementComment[]>([]);
-  const [commentId, setCommentId] = useState<string[]>([]);
 
   const getComments = async () => {
     try {
-      const response = await getAnnouncmentComment(announcement.id.toString());
-      // console.log("API response for comments:", response);
+      const response = await getAnnouncmentComment(
+        announcement.id.toString(),
+        accessToken
+      );
+      console.log("API response for comments:", response);
       setComments(response || []);
-      // setCommentId(response.map((comment) => comment.is_liked.toString()));
-      console.log("commentId:", commentId);
     } catch (error) {
       console.error("Error fetching comments", error);
     }
@@ -78,23 +76,36 @@ export const Announcement = () => {
     }
   };
 
-  // const toggleLikePost = async (commentId: number) => {
-  //   try {
-  //     if (isLiked) {
-  //       const res = await retractComment(commentId.toString(), accessToken);
-  //       console.log("RetractLike res:", res);
-  //       setIsLiked(false);
-  //       setLikesCount((prev) => prev - 1);
-  //     } else {
-  //       const res = await likeComment(commentId.toString(), accessToken);
-  //       console.log("PostLike res:", res);
-  //       setIsLiked(true);
-  //       setLikesCount((prev) => prev + 1);
-  //     }
-  //   } catch (err) {
-  //     console.log("Like toggle error:", err);
-  //   }
-  // };
+  const toggleLikePost = async (commentId: number) => {
+    try {
+      const isLiked = comments.find(
+        (comment) => comment.id === commentId
+      )?.is_liked;
+      if (isLiked) {
+        const res = await retractComment(commentId.toString(), accessToken);
+        setComments(
+          comments.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, is_liked: false, likes: comment.likes - 1 }
+              : comment
+          )
+        );
+        console.log("RetractLike res:", res);
+      } else {
+        const res = await likeComment(commentId.toString(), accessToken);
+        console.log("PostLike res:", res);
+        setComments(
+          comments.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, is_liked: true, likes: comment.likes + 1 }
+              : comment
+          )
+        );
+      }
+    } catch (err) {
+      console.log("Like toggle error:", err);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFBE4" }}>
@@ -106,9 +117,9 @@ export const Announcement = () => {
           <Ionicons name="arrow-back" size={24} color="#5B3400" />
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.container}>
+      <View>
         <View style={styles.card}>
-          <View style={styles.header}>
+          <View style={styles.cardHeader}>
             <View style={styles.sportsContainer}>
               {Array.isArray(announcement?.sports) &&
                 announcement.sports.map((sport: any, index) => (
@@ -132,7 +143,9 @@ export const Announcement = () => {
           </View>
 
           <Text style={styles.caption}>{announcement.caption}</Text>
-          <Text style={styles.description}>{announcement.description}</Text>
+          <ScrollView style={{ maxHeight: 100 }}>
+            <Text style={styles.description}>{announcement.description}</Text>
+          </ScrollView>
 
           <View style={styles.detailsContainer}>
             <View style={styles.detailRow}>
@@ -157,7 +170,7 @@ export const Announcement = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -173,31 +186,36 @@ export const Announcement = () => {
             renderItem={({ item }) => (
               <View style={styles.comment}>
                 <View style={styles.commentContent}>
+                  <Text style={styles.detailText}>{item.author_username}</Text>
+                  <Text style={styles.detailText}>{item.content}</Text>
                   <Text style={styles.detailText}>
-                    Comment by: {item.author_username}
-                  </Text>
-                  <Text style={styles.detailText}>Comment: {item.content}</Text>
-                  <Text style={styles.detailText}>
-                    Created at: {new Date(item.created_at).toLocaleDateString()}
+                    {new Date(item.created_at).toLocaleDateString()}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.deleteIcon}
-                  onPress={() => handleDeleteComment(item.id.toString())}
-                >
-                  <Ionicons
-                    name="trash-outline"
-                    size={20}
-                    color="rgb(179, 10, 10)"
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => {}}>
-                  <Ionicons
-                    name={item.is_liked ? "heart" : "heart-outline"}
-                    size={20}
-                    color="#AC591A"
-                  />
-                </TouchableOpacity>
+                <View style={{ flexDirection: "row", gap: rem(8) }}>
+                  <View style={{ alignItems: "center" }}>
+                    <TouchableOpacity onPress={() => toggleLikePost(item.id)}>
+                      <Ionicons
+                        name={item.is_liked ? "heart" : "heart-outline"}
+                        size={24}
+                        color="#AC591A"
+                      />
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: rem(10), color: "#AC591A" }}>
+                      {item.likes}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteIcon}
+                    onPress={() => handleDeleteComment(item.id.toString())}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color="rgb(179, 10, 10)"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           />
@@ -223,10 +241,6 @@ export const Announcement = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFBE4",
-  },
   card: {
     backgroundColor: "#FFFBE4",
     margin: rem(16),
@@ -239,6 +253,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingHorizontal: rem(16),
+    paddingVertical: rem(8),
+  },
+  cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: rem(16),
@@ -301,15 +322,11 @@ const styles = StyleSheet.create({
   commentsSection: {
     flex: 1,
     justifyContent: "space-between",
-    backgroundColor: "#FFFBE4",
   },
   comment: {
     flexDirection: "row",
-    alignItems: "center",
     padding: rem(12),
     borderRadius: rem(8),
-    borderWidth: 1,
-    borderColor: "#5B3400",
     marginBottom: rem(10),
     gap: rem(10),
   },
@@ -321,7 +338,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: rem(10),
     paddingVertical: rem(8),
-    backgroundColor: "#FFFBE4",
     borderTopWidth: 1,
     borderColor: "#AC591A",
   },
@@ -342,9 +358,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: rem(10),
   },
-  deleteIcon: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingLeft: rem(8),
-  },
+  deleteIcon: {},
 });

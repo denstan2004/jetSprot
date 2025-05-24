@@ -47,7 +47,7 @@ import createReport from "@/API/MODERATION/reports/createReport";
 import ReportPopup from "@/components/ReportPopup";
 
 type UserRouteProp = RouteProp<AuthStackParamList, "User">;
-
+//TODO розділити на два скріни які використовую один і той самй компонент юезр який приймає юзер інфо і булку із курент юзер
 export const UserPage = () => {
   const route = useRoute<UserRouteProp>();
   const userId =
@@ -64,7 +64,7 @@ export const UserPage = () => {
   const [lastName, setLastName] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [posts, setPosts] = useState<PostInterface[]>([]);
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showDopInfo, setShowDopInfo] = useState(false);
   const [animation] = useState(new Animated.Value(0));
@@ -77,7 +77,7 @@ export const UserPage = () => {
   const [isUpdatingRating, setIsUpdatingRating] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const isOurUser = userId === sel?.id.toString(); // check if the user is the current user
-
+  console.log("userId:", userId);
   // --- report ---
   const [isReportVisible, setReportVisible] = useState(false);
 
@@ -217,7 +217,9 @@ export const UserPage = () => {
 
       try {
         const user: User = await getUserById(userId);
+        console.log("user:", user);
         setCurrentUser(user);
+        // console.log("user:", user);
         setUserName(user.username);
         setFirstName(user.first_name);
 
@@ -265,6 +267,7 @@ export const UserPage = () => {
         try {
           const storageRef = ref(storage, currentUser.pfp_url);
           const url = await getDownloadURL(storageRef);
+          console.log("url:", url);
           setMediaUrl(url);
         } catch (error) {
           console.error("Failed to fetch avatar:", error);
@@ -377,7 +380,7 @@ export const UserPage = () => {
             initialRating={isUpdatingRating ? userReview?.rating : undefined}
             isUpdatingRating={isUpdatingRating}
             onSubmit={handleCreateReview}
-            onUpdate={handleUpdateRating}
+            onUpdate={handleUpdateRating} 
             onCancel={() => {
               setIsUpdatingRating(false);
               setRatingVisible(false);
@@ -454,7 +457,7 @@ export const UserPage = () => {
                           <View style={styles.reviewContent}>
                             <TouchableOpacity>
                               <Image
-                                source={{ uri: mediaUrl || "" }}
+                                source={{ uri: mediaUrl || sel?.pfp_url }}
                                 style={styles.reviewAvatar}
                               />
                             </TouchableOpacity>
@@ -554,8 +557,8 @@ export const UserPage = () => {
                   onPress={handleNavigateToEditProfile}
                   // style={styles.addIconContainer}
                 >
-                  <Image
-                    source={{ uri: mediaUrl || "" }}
+                  <Image  
+                    source={{ uri: mediaUrl || sel?.pfp_url }}
                     style={styles.profileImage}
                   />
                   {currentUser?.is_verified && (

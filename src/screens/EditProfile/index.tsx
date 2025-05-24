@@ -25,7 +25,7 @@ import uploadPFP from "@/API/user/uploadPFP";
 import * as ImagePicker from "expo-image-picker";
 
 export const EditProfile = () => {
-  const user = useSelector((state: RootState) => state.user.userData); 
+  const user = useSelector((state: RootState) => state.user.userData);
   const token = useSelector((state: RootState) => state.user.accessToken);
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
@@ -39,7 +39,6 @@ export const EditProfile = () => {
     last_name: "",
     date_of_birth: "",
     pfp_url: "",
-
   });
 
   const pickMedia = async (type: "photo" | "video") => {
@@ -69,9 +68,9 @@ export const EditProfile = () => {
         pfp_url: response.firebase_url,
       };
       // console.log(userData)
-      dispatch(updateUser({...userData, pfp_url: response.firebase_url }));
+      dispatch(updateUser({ ...userData, pfp_url: response.firebase_url }));
       setUserData(updatedUserPFP);
-      
+
       setPfp(response.firebase_url);
     } catch (error) {
       console.error("Failed to upload avatar", error);
@@ -139,11 +138,6 @@ export const EditProfile = () => {
     fetchPfpUrl();
   }, [user]);
 
-  // const hadleBack = () => {
-  //   // console.log("back");
-  //   navigation.navigate("Home");
-  // };
-
   return (
     <KeyboardAvoidingView
       behavior="padding"
@@ -152,7 +146,7 @@ export const EditProfile = () => {
     >
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.goBack()}
+        onPress={() => navigation.navigate("Home")}
       >
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
