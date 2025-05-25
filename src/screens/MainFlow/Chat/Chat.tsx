@@ -30,7 +30,7 @@ import Animated, {
   interpolateColor,
   withTiming,
 } from "react-native-reanimated";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import PopUp from "@/components/DeleteGroup";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import getChatroom from "@/API/chat/getChatroom";
@@ -109,6 +109,8 @@ export const ChatScreen = () => {
     return false;
   };
 
+  const wsRef = useRef<WebSocket | null>(null);
+
   const wsUrl = `${wsUrlApi}/chat/${chatId}/?token=${accessToken}`;
   const connectWebSocket = useCallback(() => {
     const socket = new WebSocket(wsUrl);
@@ -128,6 +130,7 @@ export const ChatScreen = () => {
 
       if (data.type === "chat_message") {
         console.log("data", data);
+        markRead(data.message._id);
         setMessages((prevMessages) => [
           ...prevMessages,
           {
@@ -150,10 +153,15 @@ export const ChatScreen = () => {
             name: msg.user.name,
           },
         }));
+        for (const message of loadedMessages) {
+          console.log("message", message);
+          markRead(message._id);
+        }
         setMessages(loadedMessages.reverse());
       }
     };
 
+    wsRef.current = socket;
     setWs(socket);
   }, [wsUrl]);
 
@@ -184,8 +192,8 @@ export const ChatScreen = () => {
   };
 
   const markRead = (messageId: string) => {
-    if (ws) {
-      ws.send(
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
         JSON.stringify({
           type: "mark_read",
           message_id: messageId,
@@ -198,7 +206,7 @@ export const ChatScreen = () => {
     connectWebSocket();
 
     return () => {
-      ws?.close();
+      wsRef.current?.close();
     };
   }, [connectWebSocket]);
 
@@ -279,12 +287,17 @@ export const ChatScreen = () => {
           isMyMessage ? styles.otherMessage : styles.myMessage,
         ]}
       >
-        {/* {item.user._id === userId.toString() && (
-          <View style={styles.messageHeader}>
-            <Image source={{ uri: pfpUrls[item.user._id] || "" }} style={styles.profileImage} />
-            <Text style={[styles.messageText, {color: "#000", fontWeight: "bold",}]}>{item.user.name}</Text>
-          </View>
-        )} */}
+        <View style={styles.messageHeader}>
+          <Image
+            source={{ uri: pfpUrls[item.user._id] || "" }}
+            style={styles.profileImage}
+          />
+          <Text
+            style={[styles.messageText, { color: "#000", fontWeight: "bold" }]}
+          >
+            {item.user.name}
+          </Text>
+        </View>
 
         <Text style={styles.messageText}>{item.text}</Text>
         <Text style={styles.messageTime}>
@@ -443,9 +456,17 @@ export const ChatScreen = () => {
           style={{ flex: 1 }}
           resizeMode="cover"
         >
+          {/* <TouchableOpacity onPress={() => navigation.goBack()}>
+            <MaterialIcons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity> */}
+
           <View style={{ flex: 1, backgroundColor: "#FFFBE4AA" }}>
-            {chatroom?.is_group && (
-              <View style={styles.topBar}>
+            <View style={styles.topBar}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <MaterialIcons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+
+              {chatroom?.is_group && (
                 <TouchableOpacity
                   onPress={toggleMenu}
                   style={styles.burgerButton}
@@ -454,186 +475,184 @@ export const ChatScreen = () => {
                   <View style={styles.burgerLine} />
                   <View style={styles.burgerLine} />
                 </TouchableOpacity>
-              </View>
-            )}
+              )}
+            </View>
 
-            <KeyboardAvoidingView
-              style={{ flex: 1 }}
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-            >
-              <View style={{ flex: 1 }}>
-                {chatroom?.is_group && (
-                  <Animated.View style={[styles.menu, menuStyle]}>
-                    <Animated.View
-                      style={[styles.menuContent, menuContentStyle]}
-                    >
-                      <View style={styles.menuHeader}>
-                        {isEditing ? (
-                          <TextInput
-                            style={[
-                              styles.menuHeaderText,
-                              {
-                                borderBottomWidth: 1,
-                                borderColor: "#803511",
-                                paddingVertical: 2,
-                              },
-                            ]}
-                            value={editedGroupName}
-                            onChangeText={setEditedGroupName}
-                            onBlur={handleSaveGroupName}
-                            autoFocus
-                          />
-                        ) : (
-                          <Text style={styles.menuHeaderText}>
-                            {chatroom?.name}
-                          </Text>
+            <View style={{ flex: 1 }}>
+              {chatroom?.is_group && (
+                <Animated.View style={[styles.menu, menuStyle]}>
+                  <Animated.View style={[styles.menuContent, menuContentStyle]}>
+                    <View style={styles.menuHeader}>
+                      {isEditing ? (
+                        <TextInput
+                          style={[
+                            styles.menuHeaderText,
+                            {
+                              borderBottomWidth: 1,
+                              borderColor: "#803511",
+                              paddingVertical: 2,
+                            },
+                          ]}
+                          value={editedGroupName}
+                          onChangeText={setEditedGroupName}
+                          onBlur={handleSaveGroupName}
+                          autoFocus
+                        />
+                      ) : (
+                        <Text style={styles.menuHeaderText}>
+                          {chatroom?.name}
+                        </Text>
+                      )}
+                      <View style={{ flexDirection: "row", gap: 10 }}>
+                        {isOwner && (
+                          <TouchableOpacity onPress={handleDeleteGroup}>
+                            <Ionicons
+                              name="trash-outline"
+                              size={24}
+                              color="rgb(179, 10, 10)"
+                            />
+                          </TouchableOpacity>
                         )}
-                        <View style={{ flexDirection: "row", gap: 10 }}>
-                          {isOwner && (
-                            <TouchableOpacity onPress={handleDeleteGroup}>
-                              <Ionicons
-                                name="trash-outline"
-                                size={24}
-                                color="rgb(179, 10, 10)"
-                              />
-                            </TouchableOpacity>
-                          )}
-                          {(isAdmin || isOwner) && (
-                            <TouchableOpacity onPress={handleEditGroupName}>
-                              <Ionicons
-                                name="create-outline"
-                                size={24}
-                                color="rgb(179, 10, 10)"
-                              />
-                            </TouchableOpacity>
-                          )}
-                        </View>
+                        {(isAdmin || isOwner) && (
+                          <TouchableOpacity onPress={handleEditGroupName}>
+                            <Ionicons
+                              name="create-outline"
+                              size={24}
+                              color="rgb(179, 10, 10)"
+                            />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+
+                    <View style={styles.menuParticipants}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={styles.menuParticipantsText}>
+                          Group members
+                        </Text>
+                        {(isOwner || isAdmin) && (
+                          <TouchableOpacity
+                            onPress={() => setIsAddUserToGroupVisible(true)}
+                            style={styles.plusButton}
+                          >
+                            <Ionicons
+                              name="add"
+                              size={20}
+                              style={styles.plusButtonIcon}
+                            />
+                          </TouchableOpacity>
+                        )}
                       </View>
 
-                      <View style={styles.menuParticipants}>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
+                      <View style={styles.menuParticipantsList}>
+                        <ScrollView
+                          contentContainerStyle={{ gap: 10, flex: 1 }}
                         >
-                          <Text style={styles.menuParticipantsText}>
-                            Group members
-                          </Text>
-                          {(isOwner || isAdmin) && (
-                            <TouchableOpacity
-                              onPress={() => setIsAddUserToGroupVisible(true)}
-                              style={styles.plusButton}
+                          {chatroom?.members.map((member, index) => (
+                            <View
+                              key={index}
+                              style={styles.menuParticipantsItem}
                             >
-                              <Ionicons
-                                name="add"
-                                size={20}
-                                style={styles.plusButtonIcon}
+                              <Image
+                                source={{
+                                  uri: pfpUrls[member.id.toString()],
+                                }}
+                                style={styles.avatar}
+                                resizeMode="cover"
                               />
-                            </TouchableOpacity>
-                          )}
-                        </View>
-
-                        <View style={styles.menuParticipantsList}>
-                          <ScrollView
-                            contentContainerStyle={{ gap: 10, flex: 1 }}
-                          >
-                            {chatroom?.members.map((member, index) => (
-                              <View
-                                key={index}
-                                style={styles.menuParticipantsItem}
-                              >
-                                <Image
-                                  source={{
-                                    uri: pfpUrls[member.id.toString()],
+                              <View style={{ flexDirection: "column" }}>
+                                <Text
+                                  style={{ fontSize: 10, color: "#803511" }}
+                                >
+                                  {member.role}
+                                </Text>
+                                <Text
+                                  style={{ fontSize: 16, color: "#803511" }}
+                                >
+                                  {member.username}
+                                </Text>
+                              </View>
+                              {(isOwner || isAdmin) && (
+                                <View
+                                  style={{
+                                    flex: 1,
+                                    gap: 5,
+                                    flexDirection: "row",
+                                    justifyContent: "flex-end",
                                   }}
-                                  style={styles.avatar}
-                                  resizeMode="cover"
-                                />
-                                <View style={{ flexDirection: "column" }}>
-                                  <Text
-                                    style={{ fontSize: 10, color: "#803511" }}
-                                  >
-                                    {member.role}
-                                  </Text>
-                                  <Text
-                                    style={{ fontSize: 16, color: "#803511" }}
-                                  >
-                                    {member.username}
-                                  </Text>
-                                </View>
-                                {(isOwner || isAdmin) && (
-                                  <View
-                                    style={{
-                                      flex: 1,
-                                      gap: 5,
-                                      flexDirection: "row",
-                                      justifyContent: "flex-end",
-                                    }}
-                                  >
-                                    {canRemoveUser(member) && (
-                                      <TouchableOpacity
-                                        onPress={() => {
-                                          setSelectedUserId(member.id);
-                                          setIsRemoveUserFromGroupVisible(true);
-                                        }}
-                                      >
-                                        <Ionicons
-                                          name="person-remove"
-                                          size={20}
-                                          color="black"
-                                        />
-                                      </TouchableOpacity>
-                                    )}
-
+                                >
+                                  {canRemoveUser(member) && (
                                     <TouchableOpacity
                                       onPress={() => {
                                         setSelectedUserId(member.id);
-                                        setSelectedUserRole(member.role);
-                                        setIsUpdateRoleVisible(true);
+                                        setIsRemoveUserFromGroupVisible(true);
                                       }}
                                     >
                                       <Ionicons
-                                        name="swap-vertical-outline"
+                                        name="person-remove"
                                         size={20}
                                         color="black"
                                       />
                                     </TouchableOpacity>
-                                  </View>
-                                )}
-                              </View>
-                            ))}
-                          </ScrollView>
-                        </View>
+                                  )}
+
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      setSelectedUserId(member.id);
+                                      setSelectedUserRole(member.role);
+                                      setIsUpdateRoleVisible(true);
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name="swap-vertical-outline"
+                                      size={20}
+                                      color="black"
+                                    />
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
+                          ))}
+                        </ScrollView>
                       </View>
-                    </Animated.View>
+                    </View>
                   </Animated.View>
-                )}
+                </Animated.View>
+              )}
 
-                <View style={styles.messagesContainer}>
-                  <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    renderItem={renderMessage}
-                    keyExtractor={(item) => item._id}
-                    onContentSizeChange={() =>
-                      flatListRef.current?.scrollToEnd({ animated: true })
-                    }
-                    onLayout={() =>
-                      flatListRef.current?.scrollToEnd({ animated: true })
-                    }
-                  />
-                </View>
+              <View style={styles.messagesContainer}>
+                <FlatList
+                  ref={flatListRef}
+                  data={messages}
+                  renderItem={renderMessage}
+                  keyExtractor={(item) => item._id}
+                  onContentSizeChange={() =>
+                    flatListRef.current?.scrollToEnd({ animated: true })
+                  }
+                  onLayout={() =>
+                    flatListRef.current?.scrollToEnd({ animated: true })
+                  }
+                />
               </View>
+            </View>
 
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
+            >
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
+                  placeholder="Type a message..."
                   value={newMessage}
                   onChangeText={setNewMessage}
-                  placeholder="Type a message..."
+                  placeholderTextColor="#80351199"
                   multiline
                 />
                 <TouchableOpacity
@@ -644,13 +663,13 @@ export const ChatScreen = () => {
                   <Text style={styles.sendButtonText}>Send</Text>
                 </TouchableOpacity>
               </View>
-
-              <View style={styles.connectionStatus}>
-                <Text style={styles.connectionStatusText}>
-                  {isConnected ? "Connected" : "Chat is not available"}
-                </Text>
-              </View>
             </KeyboardAvoidingView>
+
+            <View style={styles.connectionStatus}>
+              <Text style={styles.connectionStatusText}>
+                {isConnected ? "Connected" : "Chat is not available"}
+              </Text>
+            </View>
           </View>
         </ImageBackground>
       </SafeAreaView>
@@ -664,8 +683,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFBE4",
   },
   profileImage: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: 40,
     backgroundColor: "#FFFBE4",
     justifyContent: "center",
@@ -701,6 +720,7 @@ const styles = StyleSheet.create({
   messageText: {
     color: "#FFFBE4",
     fontSize: 16,
+    fontWeight: "bold",
   },
   messageTime: {
     fontSize: 12,
@@ -711,7 +731,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     padding: 10,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#ddd",
     bottom: 0,
@@ -753,9 +773,11 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     padding: 15,
     backgroundColor: "#803511",
+    width: "100%",
+    height: 50,
   },
   burgerButton: {
     width: 30,

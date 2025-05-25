@@ -10,7 +10,12 @@ import {
   Image,
   Animated,
 } from "react-native";
-import { FontAwesome5, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import {
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { styles } from "./styles";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
@@ -70,6 +75,10 @@ export const UserPage = () => {
   const [animation] = useState(new Animated.Value(0));
   const isFollowing = followers.some((f) => f.id === sel?.id);
   const [sports, setSports] = useState<Sport[]>([]);
+  
+  const account_type = useSelector(
+    (state: RootState) => state.user.userData?.account_type
+  );
 
   // --- rating ---
   const [isRatingVisible, setRatingVisible] = useState(false);
@@ -126,7 +135,12 @@ export const UserPage = () => {
   }, []);
 
   const handleCreateReview = async (rating: number, review: string) => {
-    const response = await createReview(accessToken, Number(userId), rating, review);
+    const response = await createReview(
+      accessToken,
+      Number(userId),
+      rating,
+      review
+    );
     console.log(response);
     setUserReview(response);
     setRatingVisible(false);
@@ -380,7 +394,7 @@ export const UserPage = () => {
             initialRating={isUpdatingRating ? userReview?.rating : undefined}
             isUpdatingRating={isUpdatingRating}
             onSubmit={handleCreateReview}
-            onUpdate={handleUpdateRating} 
+            onUpdate={handleUpdateRating}
             onCancel={() => {
               setIsUpdatingRating(false);
               setRatingVisible(false);
@@ -397,17 +411,16 @@ export const UserPage = () => {
         />
       )}
       <SafeAreaView style={styles.container}>
-        {hasMissingInfo() && (
-          <TouchableOpacity
-            style={styles.warningContainer}
-            onPress={handleNavigateToSearchCountry}
-          >
-            <Text style={styles.warningText}>
-              Please complete your profile by adding your country, city and
-              sport.
-            </Text>
-          </TouchableOpacity>
-        )}
+        {/* {hasMissingInfo() && ( */}
+        <TouchableOpacity
+          style={styles.warningContainer}
+          onPress={handleNavigateToSearchCountry}
+        >
+          <Text style={styles.warningText}>
+            Please complete your profile by adding your country, city and sport.
+          </Text>
+        </TouchableOpacity>
+        {/* )} */}
 
         <View style={styles.headerTopRow}>
           <View style={styles.leftHeaderGroup}>
@@ -517,23 +530,16 @@ export const UserPage = () => {
                     : "#ccc"
                 }
               />
-              <Text style={styles.ratingText}>
-                {hasUserReview && userReview.status === "open"
-                  ? userReview?.rating
-                  : currentUser?.rating}
-              </Text>
+              {userReview && userReview.status === "open" && (
+                <Text style={styles.ratingText}>
+                  {userReview?.rating + "⭐"}
+                </Text>
+              )}
             </TouchableOpacity>
 
-            {/* Edit icon */}
+            {/* settings icon */}
             {userId === sel?.id.toString() && (
               <>
-                <TouchableOpacity
-                  onPress={handleNavigateToEditProfile}
-                  style={styles.icon}
-                >
-                  <MaterialIcons name="edit" size={20} color="white" />
-                </TouchableOpacity>
-
                 <TouchableOpacity
                   onPress={handleNavigateToUserSettings}
                   style={styles.icon}
@@ -557,7 +563,7 @@ export const UserPage = () => {
                   onPress={handleNavigateToEditProfile}
                   // style={styles.addIconContainer}
                 >
-                  <Image  
+                  <Image
                     source={{ uri: mediaUrl || sel?.pfp_url }}
                     style={styles.profileImage}
                   />
@@ -622,6 +628,7 @@ export const UserPage = () => {
                   {isFollowing ? "Unfollow" : "Follow"}
                 </Text>
               </TouchableOpacity>
+
               <TouchableOpacity style={styles.messageButton}>
                 <Text style={styles.buttonText}>Message</Text>
               </TouchableOpacity>

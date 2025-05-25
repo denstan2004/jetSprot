@@ -45,8 +45,12 @@ const userSlice = createSlice({
       state.refreshToken = "";
       state.userData = null;
     },
+    setUserType(state, { payload }: PayloadAction<string>) {
+      if (!state.userData) return;
+      state.userData.account_type = payload;
+    },
   },
 });
-export const { setUser, updateUser, logout } = userSlice.actions;
+export const { setUser, updateUser, logout, setUserType } = userSlice.actions;
 
 export default userSlice.reducer;

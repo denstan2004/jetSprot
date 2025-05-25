@@ -22,7 +22,7 @@ export const Home = () => {
         tabBarActiveTintColor: "#FFFBE4",
         tabBarInactiveTintColor: "#FFFBE4",
       }}
-      initialRouteName="UserPage"
+      initialRouteName="Publication"
     >
       <Tab.Screen
         name="Publication"

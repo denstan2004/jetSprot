@@ -146,7 +146,7 @@ export const EditProfile = () => {
     >
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate("Home")}
+        onPress={() => navigation.goBack()}
       >
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>

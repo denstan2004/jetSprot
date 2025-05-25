@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
   },
 
   icon: {
-    padding: 5,
+    // padding: 5,
   },
 
   avatarSection: {
@@ -205,9 +205,10 @@ export const styles = StyleSheet.create({
   },
 
   ratingContainer: {
+    // backgroundColor: "red",
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
+    // gap: 15,
   },
   ratingText: {
     fontSize: 15,

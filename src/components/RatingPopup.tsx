@@ -85,6 +85,7 @@ const RatingPopup = ({
 
           <Rating
             type="star"
+            minValue={1}
             startingValue={initialRating}
             imageSize={rem(25)}
             ratingCount={5}
