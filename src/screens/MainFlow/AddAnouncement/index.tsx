@@ -199,6 +199,7 @@ const AddAnnouncement = () => {
                 value={caption}
                 onChangeText={setCaption}
                 placeholder="Enter announcement caption"
+                maxLength={300}
               />
             </View>
 
@@ -211,6 +212,7 @@ const AddAnnouncement = () => {
                 placeholder="Enter announcement description"
                 multiline
                 numberOfLines={4}
+                maxLength={300}
               />
             </View>
 
@@ -222,6 +224,7 @@ const AddAnnouncement = () => {
                 onChangeText={setRequiredAmount}
                 placeholder="Enter number of people required"
                 keyboardType="numeric"
+                maxLength={3}
               />
             </View>
             {eventType !== EventType.permanent && (
@@ -355,6 +358,7 @@ const AddAnnouncement = () => {
                 onChangeText={(text) =>
                   setLocation({ ...location, country: text })
                 }
+                maxLength={50}
               />
               <TextInput
                 style={styles.input}
@@ -363,6 +367,7 @@ const AddAnnouncement = () => {
                 onChangeText={(text) =>
                   setLocation({ ...location, city: text })
                 }
+                maxLength={50}
               />
             </View>
 

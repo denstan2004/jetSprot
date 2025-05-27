@@ -1,8 +1,12 @@
 import axios from "axios";
 import { apiUrl } from "../apiUrl";
 
-const getAllUsers = async () => {
-  const response = await axios.get(`${apiUrl}/user/`);
+const getAllUsers = async (token: string) => {
+  const response = await axios.get(`${apiUrl}/user/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data.results || [];
 };
 

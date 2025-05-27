@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   is_staff: boolean;
+  is_friends: boolean;
   last_login: null;
   username: string;
   first_name: string;

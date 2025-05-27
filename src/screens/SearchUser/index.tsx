@@ -38,7 +38,7 @@ const Users = () => {
       setUsers(response);
       setFilteredUsers(response);
     } catch (error) {
-      console.log(error);
+      console.log("error search users", error);
     }
   };
 
@@ -61,11 +61,11 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await getAllUsers();
+      const response = await getAllUsers(token);
       setUsers(response);
       setFilteredUsers(response);
     } catch (error) {
-      console.log(error);
+      console.log("error fetch users", error);
     }
   };
 
@@ -115,6 +115,7 @@ const Users = () => {
           placeholderTextColor="#AC591A"
           value={searchQuery}
           onChangeText={doUserFilter}
+          maxLength={100}
         />
       </View>
       <ScrollView contentContainerStyle={styles.container}>

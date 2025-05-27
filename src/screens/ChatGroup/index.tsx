@@ -131,6 +131,7 @@ const CreateGroupChat = ({ onBack }: { onBack: () => void }) => {
           placeholderTextColor="#AC591A"
           value={searchQuery}
           onChangeText={doUserFilter}
+          maxLength={100}
         />
       </View>
       <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>

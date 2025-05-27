@@ -293,7 +293,7 @@ export const ChatScreen = () => {
             style={styles.profileImage}
           />
           <Text
-            style={[styles.messageText, { color: "#000", fontWeight: "bold" }]}
+            style={[styles.messageText, { color: "white", fontWeight: "bold" }]}
           >
             {item.user.name}
           </Text>
@@ -497,6 +497,7 @@ export const ChatScreen = () => {
                           onChangeText={setEditedGroupName}
                           onBlur={handleSaveGroupName}
                           autoFocus
+                          maxLength={100}
                         />
                       ) : (
                         <Text style={styles.menuHeaderText}>
@@ -644,7 +645,7 @@ export const ChatScreen = () => {
 
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 55 : 0}
             >
               <View style={styles.inputContainer}>
                 <TextInput
@@ -654,6 +655,7 @@ export const ChatScreen = () => {
                   onChangeText={setNewMessage}
                   placeholderTextColor="#80351199"
                   multiline
+                  maxLength={300}
                 />
                 <TouchableOpacity
                   style={styles.sendButton}
@@ -705,6 +707,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginVertical: 5,
+    // minWidth: 150,
   },
   myMessage: {
     minWidth: 120,

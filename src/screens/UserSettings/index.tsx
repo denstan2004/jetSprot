@@ -23,6 +23,10 @@ const UserSettings = () => {
     navigation.navigate("EditProfile");
   };
 
+  const handleNavigateToSityCountryAndSports = () => {
+    navigation.navigate("FoundCountry");
+  };
+
   const handleGetVerification = async () => {
     const response = await createRequest(accessToken);
     console.log(response);
@@ -62,6 +66,7 @@ const UserSettings = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={24} color="black" />
@@ -71,6 +76,7 @@ const UserSettings = () => {
         </View>
         <View style={{ width: 24 }} />
       </View>
+
       <View style={{ flex: 1 }}>
         <View style={styles.body}>
           <TouchableOpacity
@@ -96,6 +102,18 @@ const UserSettings = () => {
               style={styles.menuIcon}
             />
             <Text style={styles.menuText}>Edit profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={handleNavigateToSityCountryAndSports}
+          >
+            <MaterialIcons
+              name="travel-explore" //sports-basketball
+              size={24}
+              color="#AC591A"
+              style={styles.menuIcon}
+            />
+            <Text style={styles.menuText}>Select Sity, Country and sports</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}

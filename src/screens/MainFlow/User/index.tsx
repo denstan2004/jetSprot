@@ -75,10 +75,9 @@ export const UserPage = () => {
   const [animation] = useState(new Animated.Value(0));
   const isFollowing = followers.some((f) => f.id === sel?.id);
   const [sports, setSports] = useState<Sport[]>([]);
-  
-  const account_type = useSelector(
-    (state: RootState) => state.user.userData?.account_type
-  );
+
+  const [isFriends, setIsFriends] = useState(false);
+  const account_type = currentUser?.account_type;
 
   // --- rating ---
   const [isRatingVisible, setRatingVisible] = useState(false);
@@ -202,7 +201,12 @@ export const UserPage = () => {
 
   // --- get user by id ---
   const getUserById = async (userId: string) => {
-    const response = await axios.get(`${apiUrl}/user/${userId}/`);
+    const response = await axios.get(`${apiUrl}/user/${userId}/`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    setIsFriends(response.data.is_friends);
     return response.data;
   };
 
@@ -629,9 +633,21 @@ export const UserPage = () => {
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.messageButton}>
-                <Text style={styles.buttonText}>Message</Text>
-              </TouchableOpacity>
+              {(account_type === "private" || account_type === "open") && (
+                <TouchableOpacity
+                  style={[
+                    styles.messageButton,
+                    {
+                      opacity:
+                        account_type === "private" ? (isFriends ? 1 : 0.5) : 1,
+                    },
+                  ]}
+                  disabled={account_type === "private" && !isFriends}
+                  // onPress={...} // тут додайте вашу навігацію до чату
+                >
+                  <Text style={styles.buttonText}>Message</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
           <Animated.View

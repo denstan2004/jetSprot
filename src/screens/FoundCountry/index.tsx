@@ -208,6 +208,7 @@ const FoundCountry = () => {
                     setSelectedCountry(text);
                     fetchCountries(text);
                   }}
+                  maxLength={50}
                 />
                 {selectedCountry.length === 0 ? (
                   <Text
@@ -247,6 +248,7 @@ const FoundCountry = () => {
                     setSelectedCity(text);
                     fetchCities(text);
                   }}
+                  maxLength={50}
                 />
                 {selectedCity.length === 0 ? (
                   <Text

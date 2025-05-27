@@ -41,6 +41,20 @@ export const EditProfile = () => {
     pfp_url: "",
   });
 
+  const [initialUserData, setInitialUserData] = useState({
+    username: "",
+    first_name: "",
+    last_name: "",
+    date_of_birth: "",
+    pfp_url: "",
+  });
+
+  const [isChanged, setIsChanged] = useState(false);
+
+  const isValidateName = (name: string) => {
+    return /^[A-Za-z]+$/.test(name);
+  };
+
   const pickMedia = async (type: "photo" | "video") => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes:
@@ -86,6 +100,7 @@ export const EditProfile = () => {
           },
         });
         setUserData(response.data);
+        setInitialUserData(response.data);
       } catch (error) {
         console.error("GET error", error);
       }
@@ -95,6 +110,15 @@ export const EditProfile = () => {
       fetchUserData();
     }
   }, [user?.id, token]);
+
+  useEffect(() => {
+    const changed =
+      userData.username !== initialUserData.username ||
+      userData.first_name !== initialUserData.first_name ||
+      userData.last_name !== initialUserData.last_name ||
+      userData.date_of_birth !== initialUserData.date_of_birth;
+    setIsChanged(changed);
+  }, [userData, initialUserData]);
 
   const handleSave = async () => {
     try {
@@ -158,54 +182,77 @@ export const EditProfile = () => {
       >
         <Text style={styles.title}>Edit Profile</Text>
 
-        <TouchableOpacity onPress={() => pickMedia("photo")}>
-          {/* <View style={[styles.avatar, { backgroundColor: "#ddd" }]}>
-            <Text style={{ color: "#555" }}>Choose Avatar</Text>
-          </View> */}
-          <Image
-            source={{ uri: pfp || mediaUrl || "" }}
-            style={styles.profileImage}
-          />
-        </TouchableOpacity>
+        <View style={styles.avatarContainer}>
+          <TouchableOpacity
+            style={styles.profileImageTouchable}
+            onPress={() => pickMedia("photo")}
+            activeOpacity={0.8}
+          >
+            <Image
+              source={{ uri: pfp || mediaUrl || "" }}
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
+        </View>
         {pfp && (
           <TouchableOpacity
-            style={styles.saveButton}
+            style={styles.uploadAvatarButton}
             onPress={handleUpdateAvatar}
           >
-            <Text style={styles.saveButtonText}>Upload Avatar</Text>
+            <Text style={styles.uploadAvatarButtonText}>Upload Avatar</Text>
           </TouchableOpacity>
         )}
 
-        <TextInput
-          style={styles.input}
-          placeholder={userData.username}
-          onChangeText={(text) => setUserData({ ...userData, username: text })}
-        />
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder={userData.username || "Username"}
+            value={userData.username}
+            onChangeText={(text) =>
+              setUserData({ ...userData, username: text })
+            }
+            maxLength={30}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder={userData.first_name}
-          onChangeText={(text) =>
-            setUserData({ ...userData, first_name: text })
-          }
-        />
+          <TextInput
+            style={styles.input}
+            placeholder={userData.first_name || "First Name"}
+            value={userData.first_name}
+            onChangeText={(text) => {
+              if (isValidateName(text)) {
+                setUserData({ ...userData, first_name: text });
+              }
+            }}
+            maxLength={20}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder={userData.last_name}
-          onChangeText={(text) => setUserData({ ...userData, last_name: text })}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder={userData.last_name || "Last Name"}
+            value={userData.last_name}
+            onChangeText={(text) => {
+              if (isValidateName(text)) {
+                setUserData({ ...userData, last_name: text });
+              }
+            }}
+            maxLength={20}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Date of Birth (YYYY-MM-DD)"
-          value={userData.date_of_birth}
-          onChangeText={(text) =>
-            setUserData({ ...userData, date_of_birth: text })
-          }
-        />
-
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <TextInput
+            style={styles.input}
+            placeholder="Date of Birth (YYYY-MM-DD)"
+            value={userData.date_of_birth}
+            onChangeText={(text) =>
+              setUserData({ ...userData, date_of_birth: text })
+            }
+            maxLength={10}
+          />
+        </View>
+        <TouchableOpacity
+          style={[styles.saveButton, { opacity: isChanged ? 1 : 0.5 }]}
+          onPress={handleSave}
+          disabled={!isChanged}
+        >
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </ImageBackground>

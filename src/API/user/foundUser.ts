@@ -5,16 +5,21 @@ const foundUser = async (
   keywords: string,
   token: string
 ) => {
-  const response = await axios.get(
-    `${apiUrl}/user/search/?keywords=${keywords}`,
-    {
+  try {
+    const response = await axios.get(
+      `${apiUrl}/user/search/?keywords=${keywords}`,
+      {
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  return response.data;
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("error found user", error);
+    throw error;
+  }
 };
 
 export default foundUser;

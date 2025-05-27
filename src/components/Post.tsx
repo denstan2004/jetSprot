@@ -260,6 +260,10 @@ const Post = ({ post }: PostProps) => {
       </TouchableOpacity>  */}
 
       <Text style={styles.caption}>{post.caption}</Text>
+      {/* Hashtags section */}
+      <View style={styles.hashtagsContainer}>
+        {post.hashtags && <Text style={styles.hashtag}>{post.hashtags}</Text>}
+      </View>
       <Text style={styles.description}>{post.description}</Text>
 
       {post.media_files && post.media_files.length > 0 && (
@@ -386,6 +390,7 @@ const Post = ({ post }: PostProps) => {
                   onChangeText={setNewComment}
                   placeholder="Write a comment..."
                   placeholderTextColor="#AC591A"
+                  maxLength={100}
                 />
                 <TouchableOpacity
                   onPress={addComment}
@@ -406,9 +411,9 @@ export default Post;
 
 const styles = StyleSheet.create({
   postCard: {
-    height: 400,
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 24,
+    marginTop: 8,
     shadowColor: "#000",
     shadowOffset: { width: 5, height: 3 },
     shadowOpacity: 0,
@@ -430,25 +435,46 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   username: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#5B3400",
+    backgroundColor: "#FFF3E0",
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   caption: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#AC591A",
+    marginBottom: 4,
+  },
+  hashtagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 8,
+    gap: 6,
+  },
+  hashtag: {
+    color: "#E08B2F",
+    fontWeight: "600",
+    marginRight: 8,
+    fontSize: 15,
+    backgroundColor: "#FFF3E0",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginBottom: 4,
   },
   description: {
     fontSize: 16,
     color: "#5B3400",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   mediaWrapper: {
     position: "relative",
     height: 300,
-    marginBottom: 12,
+    marginBottom: 20,
   },
   scrollView: {
     flex: 1,
@@ -470,7 +496,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: "#E0C097",
-    paddingTop: 12,
+    paddingTop: 16,
+    marginTop: 8,
   },
   likes: {
     flexDirection: "row",
@@ -519,6 +546,7 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     marginTop: 10,
+    marginBottom: 10,
   },
   noComments: {
     fontSize: 14,
@@ -534,8 +562,11 @@ const styles = StyleSheet.create({
     elevation: 3,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
-    paddingVertical: 6,
+    marginBottom: 18,
+    paddingVertical: 10,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    paddingHorizontal: 8,
   },
   commentContent: {
     flexDirection: "row",
@@ -561,8 +592,8 @@ const styles = StyleSheet.create({
   addCommentContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 12,
-    marginBottom: 12,
+    marginTop: 16,
+    marginBottom: 8,
   },
   commentInput: {
     flex: 1,

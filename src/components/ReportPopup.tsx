@@ -82,6 +82,7 @@ const ReportPopup = ({ onSubmit, onCancel, text, title }: RatingPopupProps) => {
           value={report}
           onChangeText={setReport}
           style={styles.reviewInput}
+          maxLength={100}
         />
 
         <View style={styles.buttonsContainer}>

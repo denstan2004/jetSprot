@@ -66,6 +66,7 @@ export const ListUsers = () => {
             pfpUrl={pfpUrls[user.id]}
             userId={user.id.toString()}
             isSelected={false}
+            isVerified={user.is_verified || false}
           />
         ))}
       </ScrollView>

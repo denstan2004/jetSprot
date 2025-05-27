@@ -226,6 +226,7 @@ export const Announcement = () => {
               value={comment}
               onChangeText={setComment}
               placeholderTextColor="#AC591A"
+              maxLength={100}
             />
             <TouchableOpacity
               style={styles.sendButton}

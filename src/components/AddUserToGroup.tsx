@@ -121,6 +121,7 @@ const AddUserToGroup = ({
           placeholderTextColor="#AC591A"
           value={searchQuery}
           onChangeText={doUserFilter}
+          maxLength={50}
         />
       </View>
       <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
@@ -153,6 +154,7 @@ const AddUserToGroup = ({
             userId={user.id.toString()}
             onCardPress={() => toggleUserSelection(user)}
             isSelected={!!selectedUsers.find((u) => u.id === user.id)}
+            isVerified={user.is_verified || false}
           />
         ))}
       </ScrollView>

@@ -63,6 +63,7 @@ const RatingPopup = ({
             value={review}
             onChangeText={setReview}
             style={styles.reviewInput}
+            maxLength={100}
           />
 
           <View style={styles.buttonsContainer}>
@@ -100,6 +101,7 @@ const RatingPopup = ({
             value={review}
             onChangeText={setReview}
             style={styles.reviewInput}
+            maxLength={100}
           />
 
           <View style={styles.buttonsContainer}>
