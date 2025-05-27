@@ -107,6 +107,16 @@ export const Announcement = () => {
     }
   };
 
+  const handleRequest = async () => {
+    try {
+      // TODO: Implement request functionality
+      console.log("Request button pressed for announcement:", announcement.id);
+      // Add your API call here
+    } catch (error) {
+      console.error("Error making request:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFBE4" }}>
       <View style={styles.header}>
@@ -168,6 +178,14 @@ export const Announcement = () => {
                 {new Date(announcement.created_at).toLocaleDateString()}
               </Text>
             </View>
+          </View>
+          <View style={styles.requestButtonContainer}>
+            <TouchableOpacity
+              style={styles.requestButton}
+              onPress={handleRequest}
+            >
+              <Text style={styles.requestButtonText}>Request</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -360,4 +378,27 @@ const styles = StyleSheet.create({
     paddingVertical: rem(10),
   },
   deleteIcon: {},
+  requestButtonContainer: {
+    marginTop: rem(16),
+    alignItems: "center",
+  },
+  requestButton: {
+    backgroundColor: "#AC591A",
+    paddingHorizontal: rem(24),
+    paddingVertical: rem(12),
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: rem(8),
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  requestButtonText: {
+    color: "#FFFBE4",
+    fontSize: rem(16),
+    fontWeight: "600",
+  },
 });

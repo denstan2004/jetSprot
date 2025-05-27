@@ -20,6 +20,8 @@ import { useState } from "react";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/firebase";
 import searchUserBySports from "@/API/sport/getUserBySport";
+import Slider from "@react-native-community/slider";
+import { Icon } from "react-native-paper";
 
 const Users = () => {
   const token = useSelector((state: RootState) => state.user.accessToken);
@@ -29,12 +31,19 @@ const Users = () => {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [pfpUrls, setPfpUrls] = useState<Record<string, string>>({});
+  const [minRating, setMinRating] = useState(0);
+  const [minAge, setMinAge] = useState(0);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
   const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
 
   const foundUsers = async () => {
     try {
-      const response = await foundUser(searchQuery, token);
+      const response = await foundUser(
+        token,
+        searchQuery || undefined,
+        minRating > 0 ? minRating : undefined,
+        minAge > 0 ? minAge : undefined
+      );
       setUsers(response);
       setFilteredUsers(response);
     } catch (error) {
@@ -47,16 +56,42 @@ const Users = () => {
     if (filterTimeoutRef.current) {
       clearTimeout(filterTimeoutRef.current);
     }
-    if (!query) return setFilteredUsers(users);
+    if (!query && minRating === 0 && minAge === 0) {
+      fetchUsers();
+      return;
+    }
 
     filterTimeoutRef.current = setTimeout(() => {
-      console.log("====>", query);
-      setFilteredUsers(
-        users.filter((user) =>
-          user.username.toLowerCase().includes(query.toLowerCase())
-        )
-      );
+      foundUsers();
     }, 500);
+  };
+
+  const applyFilters = () => {
+    foundUsers();
+  };
+
+  const clearFilters = () => {
+    setMinRating(0);
+    setMinAge(0);
+    if (!searchQuery) {
+      fetchUsers();
+    } else {
+      foundUsers();
+    }
+  };
+
+  const calculateAge = (birthDate: string) => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+    return age;
   };
 
   const fetchUsers = async () => {
@@ -106,7 +141,54 @@ const Users = () => {
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setShowFilterMenu(!showFilterMenu)}
+        >
+          <Icon source="filter" size={20} color="rgb(179, 119, 15)" />
+        </TouchableOpacity>
       </View>
+
+      {showFilterMenu && (
+        <View style={styles.filterMenu}>
+          <View style={styles.filterInputContainer}>
+            <Text style={styles.filterLabel}>Minimum Rating: {minRating}</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={5}
+              step={1}
+              value={minRating}
+              onValueChange={setMinRating}
+              minimumTrackTintColor="#AC591A"
+              maximumTrackTintColor="#D3D3D3"
+              thumbTintColor="#AC591A"
+            />
+          </View>
+          <View style={styles.filterInputContainer}>
+            <Text style={styles.filterLabel}>Minimum Age: {minAge}</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={100}
+              step={1}
+              value={minAge}
+              onValueChange={setMinAge}
+              minimumTrackTintColor="#AC591A"
+              maximumTrackTintColor="#D3D3D3"
+              thumbTintColor="#AC591A"
+            />
+          </View>
+          <View style={{ gap: 10 }}>
+            <TouchableOpacity style={styles.applyButton} onPress={clearFilters}>
+              <Text style={styles.applyButtonText}>Clear Filters</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+              <Text style={styles.applyButtonText}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <View style={styles.searchContainer}>
         <TextInput

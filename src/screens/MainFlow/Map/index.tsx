@@ -34,6 +34,8 @@ import { getFillteredAnnouncement } from "@/API/announcement/getFillteredAnnounc
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
 import { EventType } from "@/API/announcement/createAnnouncement";
+import { Badge } from "react-native-paper";
+import { getAllRequests } from "@/API/announcement/getAllRequests";
 //TODO: adding marker as part of this screen
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
@@ -48,6 +50,7 @@ export const Map = () => {
   const [announcement, setAnnouncement] = useState<AnnouncementType | null>(
     null
   );
+  const [requests, setRequests] = useState<RequestType[]>([]);
   const [sports, setSports] = useState<SportInterface[]>([]);
   const [filterdMarkers, setFilterdMarkers] = useState<MarkerType[]>([]);
   const [mapKey, setMapKey] = useState(0);
@@ -73,6 +76,11 @@ export const Map = () => {
     getSports().then((res) => {
       setSports(res);
     });
+    if (sel?.accessToken) {
+      getAllRequests(sel.accessToken).then((res) => {
+        console.log(res);
+      });
+    }
   }, []);
   useEffect(() => {
     if (selectedMarker) {
@@ -423,6 +431,15 @@ export const Map = () => {
         <Ionicons name="open-outline" size={24} color="#803511" />
       </TouchableOpacity>
       <TouchableOpacity
+        style={styles.notifications}
+        onPress={() => {
+          navigation.navigate("AnouncementList");
+        }}
+      >
+        <Ionicons name="notifications" size={24} color="#803511" />
+        <Badge style={{position: "absolute", top: 0, right: 0}}>10</Badge>
+      </TouchableOpacity>
+      <TouchableOpacity
         style={styles.addButton}
         onPress={() => {
           navigation.navigate("AddAnnouncement");
@@ -662,6 +679,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  notifications:{
+    zIndex: 10000,
+    position: "absolute",
+    top: 150,
+    left: 10,
+    backgroundColor: "white",
+    width: 70,
+    height: 70,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    fontFamily: "Poppins-Bold",
+    fontWeight: "bold",
+    color: "#803511",
   },
   viewAll: {
     zIndex: 10000,
