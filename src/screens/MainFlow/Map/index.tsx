@@ -1,10 +1,9 @@
 import React from "react";
 import { Marker } from "react-native-maps";
 import MapView from "react-native-maps";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { styles } from "./styles";
 import {
   Modal,
-  StyleSheet,
   View,
   TouchableOpacity,
   Text,
@@ -28,15 +27,16 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { getSports, SportInterface } from "@/API/sport/getSports";
-import { rem } from "@/theme/units";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { getFillteredAnnouncement } from "@/API/announcement/getFillteredAnnouncement";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/redux/store";
 import { EventType } from "@/API/announcement/createAnnouncement";
 import { Badge } from "react-native-paper";
-import { getAllRequests } from "@/API/announcement/getAllRequests";
-//TODO: adding marker as part of this screen
+import { getAllRequests, RequestType } from "@/API/announcement/getAllRequests";
+import { getMyRequests } from "@/API/announcement/getMyRequests";
+import { getUserMarkers } from "@/API/announcement/markers/getUserMarkers";
+import { rem } from "@/theme/units";
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
 const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
@@ -50,12 +50,15 @@ export const Map = () => {
   const [announcement, setAnnouncement] = useState<AnnouncementType | null>(
     null
   );
+  const [userMarkers, setUserMarkers] = useState<MarkerType[]>([]);
   const [requests, setRequests] = useState<RequestType[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<RequestType[]>([]);
   const [sports, setSports] = useState<SportInterface[]>([]);
   const [filterdMarkers, setFilterdMarkers] = useState<MarkerType[]>([]);
   const [mapKey, setMapKey] = useState(0);
   const menuAnimation = useSharedValue(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showUserMarkers, setShowUserMarkers] = useState(false);
   const { width, height } = Dimensions.get("window");
   const [filters, setFilters] = useState({
     event_type: undefined as number | undefined,
@@ -72,21 +75,50 @@ export const Map = () => {
   const updateMapKey = () => {
     setMapKey((prev) => prev + 1);
   };
-  useEffect(() => {
-    getSports().then((res) => {
-      setSports(res);
-    });
-    if (sel?.accessToken) {
-      getAllRequests(sel.accessToken).then((res) => {
-        console.log(res);
-      });
-    }
-  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchData = async () => {
+        try {
+          // Fetch markers
+          const markersResponse = await getAllMarkers();
+          setMarkers(markersResponse.results.filter((e) => e.status !== 0));
+          updateMapKey();
+
+          // Fetch user markers
+          const userMarkersResponse = await getUserMarkers(sel.accessToken);
+          setUserMarkers(userMarkersResponse.results);
+
+          // Fetch sports
+          const sportsRes = await getSports();
+          setSports(sportsRes);
+
+          // Fetch requests if user is logged in
+          if (sel.accessToken) {
+            const [requestsRes, outgoingRequestsRes] = await Promise.all([
+              getAllRequests(sel.accessToken),
+              getMyRequests(sel.accessToken),
+            ]);
+            setRequests(requestsRes);
+            setOutgoingRequests(outgoingRequestsRes);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+      fetchData();
+    }, [sel.accessToken])
+  );
+
   useEffect(() => {
     if (selectedMarker) {
-      getAnnouncementById(selectedMarker.announcement).then((announcement) => {
-        setAnnouncement(announcement);
-      });
+      if (sel?.accessToken) {
+        getAnnouncementById(selectedMarker.announcement, sel.accessToken).then(
+          (announcement) => {
+            setAnnouncement(announcement);
+          }
+        );
+      }
     }
   }, [selectedMarker]);
 
@@ -102,11 +134,7 @@ export const Map = () => {
     }
   }, [selectedSports]);
   useEffect(() => {
-    markers.forEach((element) => {
-      console.log(element.sports);
-    });
-    console.log("filterdMarkers", filterdMarkers);
-    console.log("selectedSports", selectedSports);
+    markers.forEach((element) => {});
   }, [filterdMarkers, selectedMarker, markers]);
   const handleMarkerPress = (marker: MarkerType) => {
     setSelectedMarker(marker);
@@ -124,17 +152,6 @@ export const Map = () => {
       closeModal();
     }
   };
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const fetchMarkers = async () => {
-        const response = await getAllMarkers();
-        setMarkers(response.results.filter((e) => e.status !== 0));
-        updateMapKey();
-      };
-      fetchMarkers();
-    }, [])
-  );
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -203,7 +220,7 @@ export const Map = () => {
 
   const handleFilterApply = async () => {
     if (!sel?.accessToken) return;
-
+    setShowUserMarkers(false);
     try {
       const filterParams = {
         ...filters,
@@ -216,9 +233,7 @@ export const Map = () => {
       );
       setFilterdMarkers(response.results);
       setIsFiltered(true);
-    } catch (error) {
-      console.error("Error applying filters:", error);
-    }
+    } catch (error) {}
   };
 
   const handleClearFilters = async () => {
@@ -393,6 +408,19 @@ export const Map = () => {
                 description={marker.country}
               />
             ))
+          : showUserMarkers
+          ? userMarkers.map((marker) => (
+              <Marker
+                key={marker.id}
+                onPress={() => handleMarkerPress(marker)}
+                coordinate={{
+                  latitude: parseFloat(marker.latitude),
+                  longitude: parseFloat(marker.longitude),
+                }}
+                title={marker.city}
+                description={marker.country}
+              />
+            ))
           : markers.map((marker) => (
               <Marker
                 key={marker.id}
@@ -433,11 +461,50 @@ export const Map = () => {
       <TouchableOpacity
         style={styles.notifications}
         onPress={() => {
-          navigation.navigate("AnouncementList");
+          navigation.navigate("Requests");
         }}
       >
         <Ionicons name="notifications" size={24} color="#803511" />
-        <Badge style={{position: "absolute", top: 0, right: 0}}>10</Badge>
+        <Badge
+          style={{ fontSize: rem(12), position: "absolute", top: 0, right: 0 }}
+        >
+          {requests.length}
+        </Badge>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.outgoingRequests}
+        onPress={() => {
+          navigation.navigate("OutgoingRequests");
+        }}
+      >
+        <Ionicons name="paper-plane" size={24} color="#803511" />
+        <Badge
+          style={{ fontSize: rem(12), position: "absolute", top: 0, right: 0 }}
+        >
+          {outgoingRequests.length}
+        </Badge>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.outgoingRequests}
+        onPress={() => {
+          navigation.navigate("OutgoingRequests");
+        }}
+      >
+        <Ionicons name="paper-plane" size={24} color="#803511" />
+        <Badge
+          style={{ fontSize: rem(12), position: "absolute", top: 0, right: 0 }}
+        >
+          {outgoingRequests.length}
+        </Badge>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.userMarkers}
+        onPress={() => {
+          setShowUserMarkers(!showUserMarkers);
+        }}
+      >
+        <Ionicons  name={showUserMarkers ? "map" : "map-outline"} size={24} color="#803511" />
+      
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.addButton}
@@ -530,260 +597,3 @@ export const Map = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "transparent",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    height: 300,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  sportsContainer: {
-    marginTop: rem(10),
-    flexDirection: "row",
-    display: "flex",
-    flexWrap: "wrap",
-    gap: rem(8),
-  },
-  sportButton: {
-    paddingHorizontal: rem(12),
-    paddingVertical: rem(6),
-    borderRadius: rem(16),
-    backgroundColor: "rgba(213, 208, 169, 0.51)",
-  },
-  selectedSport: {
-    backgroundColor: "#803511",
-  },
-  sportText: {
-    fontWeight: "bold",
-
-    color: "#803511",
-  },
-  sportsTitle: {
-    marginTop: rem(10),
-    marginLeft: rem(10),
-    fontFamily: "Poppins-Bold",
-    fontWeight: "bold",
-    color: "#803511",
-  },
-  selectedSportText: {
-    color: "white",
-  },
-  navigationButton: {
-    padding: 4,
-  },
-  markerInfo: {
-    marginTop: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  creator: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  sportItem: {
-    backgroundColor: "#E8E8E8",
-    padding: rem(5),
-    borderRadius: rem(5),
-    marginRight: rem(5),
-    marginBottom: rem(5),
-  },
-  noSports: {
-    color: "#666",
-    fontStyle: "italic",
-  },
-  dates: {
-    fontSize: 14,
-    color: "#666",
-  },
-  addButton: {
-    zIndex: 10000,
-    position: "absolute",
-    top: 50,
-    right: 10,
-    backgroundColor: "white",
-    width: 70,
-    height: 70,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  MenuButton: {
-    zIndex: 10000,
-    position: "absolute",
-    alignSelf: "center",
-    bottom: 10,
-    backgroundColor: "white",
-    width: 50,
-    height: 50,
-    borderRadius: 9999,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-
-  menu: {
-    position: "absolute",
-    zIndex: 1000,
-    paddingTop: rem(20),
-    bottom: 0,
-    left: 0,
-    width: "100%",
-    height: rem(200),
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    backgroundColor: "#FFFBE4",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  notifications:{
-    zIndex: 10000,
-    position: "absolute",
-    top: 150,
-    left: 10,
-    backgroundColor: "white",
-    width: 70,
-    height: 70,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    fontFamily: "Poppins-Bold",
-    fontWeight: "bold",
-    color: "#803511",
-  },
-  viewAll: {
-    zIndex: 10000,
-    position: "absolute",
-    top: 50,
-    left: 10,
-    backgroundColor: "white",
-    width: 70,
-    height: 70,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    fontFamily: "Poppins-Bold",
-    fontWeight: "bold",
-    color: "#803511",
-  },
-  filterControls: {
-    padding: rem(16),
-    gap: rem(16),
-  },
-  filterTitle: {
-    fontSize: rem(18),
-    fontWeight: "bold",
-    color: "#803511",
-    marginBottom: rem(8),
-  },
-  filterSection: {
-    gap: rem(8),
-  },
-  filterLabel: {
-    fontSize: rem(16),
-    color: "#5B3400",
-    fontWeight: "500",
-  },
-  filterOptions: {
-    flexDirection: "row",
-    gap: rem(8),
-  },
-  filterButton: {
-    paddingHorizontal: rem(12),
-    paddingVertical: rem(6),
-    borderRadius: rem(16),
-    backgroundColor: "rgba(213, 208, 169, 0.51)",
-  },
-  filterButtonActive: {
-    backgroundColor: "#803511",
-  },
-  filterButtonText: {
-    color: "#803511",
-    fontWeight: "500",
-  },
-  filterButtonTextActive: {
-    color: "white",
-  },
-  filterActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: rem(8),
-    marginTop: rem(8),
-  },
-  clearButton: {
-    flex: 1,
-    padding: rem(12),
-    borderRadius: rem(16),
-    backgroundColor: "rgba(213, 208, 169, 0.51)",
-    alignItems: "center",
-  },
-  clearButtonText: {
-    color: "#803511",
-    fontWeight: "500",
-  },
-  applyButton: {
-    flex: 1,
-    padding: rem(12),
-    borderRadius: rem(16),
-    backgroundColor: "#803511",
-    alignItems: "center",
-  },
-  applyButtonText: {
-    color: "white",
-    fontWeight: "500",
-  },
-});

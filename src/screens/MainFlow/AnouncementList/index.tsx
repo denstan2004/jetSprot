@@ -14,6 +14,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { Ionicons } from "@expo/vector-icons";
 import { rem } from "@/theme/units";
+import { RootState } from "@/store/redux/store";
+import { useSelector } from "react-redux";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
@@ -25,11 +27,11 @@ interface Sport {
 export const AnouncementList = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const navigation = useNavigation<NavigationProp>();
-
+  const sel = useSelector((state: RootState) => state.user);
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const data = await getAllAnouncements();
+        const data = await getAllAnouncements(sel.accessToken);
         setAnnouncements(data);
       } catch (error) {
         console.error("Error fetching announcements:", error);

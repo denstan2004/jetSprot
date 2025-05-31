@@ -1,34 +1,36 @@
 import axios from "axios";
 import { apiUrl } from "../apiUrl";
 
-interface PostVideoData {
+interface PostFotoData {
   caption: string;
   description: string;
   hashtags: string;
-  media: string | null;
+  media: string[];
 }
 
-const postVideo = async (data: PostVideoData, acces: string) => {
+const postFoto = async (data: PostFotoData, token: string) => {
   const formData = new FormData();
-
   formData.append("caption", data.caption);
   formData.append("description", data.description);
   formData.append("hashtags", data.hashtags);
 
-  const mediaFile = {
-    uri: data.media,
-    type: "video/mp4",
-    name: "media.mp4",
-  };
-
-  formData.append("media", mediaFile as any);
+  // Append each media file
+  data.media.forEach((mediaUri, index) => {
+    const mediaFile = {
+      uri: mediaUri,
+      type: "image/jpeg",
+      name: `media${index}.jpg`,
+    };
+    formData.append("media_files", mediaFile as any);
+  });
 
   const response = await axios.post(`${apiUrl}/publication/`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${acces}`,
+      Authorization: `Bearer ${token}`,
     },
   });
   return response.data;
 };
-export default postVideo;
+
+export default postFoto;

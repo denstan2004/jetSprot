@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ScrollView,
   Image,
   Animated,
+  Alert,
 } from "react-native";
 import {
   FontAwesome5,
@@ -25,6 +26,7 @@ import {
   useNavigation,
   useRoute,
   RouteProp,
+  useFocusEffect,
 } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
 import { User } from "@/types/User";
@@ -134,38 +136,51 @@ export const UserPage = () => {
   }, []);
 
   const handleCreateReview = async (rating: number, review: string) => {
-    const response = await createReview(
-      accessToken,
-      Number(userId),
-      rating,
-      review
-    );
-    console.log(response);
-    setUserReview(response);
-    setRatingVisible(false);
+    try {
+      const response = await createReview(
+        accessToken,
+        Number(userId),
+        rating,
+        review
+      );
+      console.log("[UserPage] Review created successfully:", response);
+      setUserReview(response);
+      setRatingVisible(false);
+    } catch (error) {
+      console.error("[UserPage] Error creating review:", error);
+      Alert.alert("Error", "Failed to create review. Please try again.");
+    }
   };
 
   const handleDeleteReview = async (reviewId: string) => {
-    const response = await deleteReview(reviewId, accessToken);
-    console.log(response);
-    setUserReview(null);
-    await getReview();
+    try {
+      const response = await deleteReview(reviewId, accessToken);
+      console.log("[UserPage] Review deleted successfully:", response);
+      setUserReview(null);
+      await getReview();
+    } catch (error) {
+      console.error("[UserPage] Error deleting review:", error);
+      Alert.alert("Error", "Failed to delete review. Please try again.");
+    }
   };
 
   const handleUpdateRating = async (rating: number, description: string) => {
-    const response = await changeReview(
-      // we do change but not create
-      accessToken,
-      userReview?.id.toString() || "",
-      rating,
-      description
-    );
-
-    console.log(response);
-    setUserReview(response);
-    setIsUpdatingRating(false);
-    setRatingVisible(false);
-    getReview();
+    try {
+      const response = await changeReview(
+        accessToken,
+        userReview?.id.toString() || "",
+        rating,
+        description
+      );
+      console.log("[UserPage] Review updated successfully:", response);
+      setUserReview(response);
+      setIsUpdatingRating(false);
+      setRatingVisible(false);
+      getReview();
+    } catch (error) {
+      console.error("[UserPage] Error updating review:", error);
+      Alert.alert("Error", "Failed to update review. Please try again.");
+    }
   };
 
   // const handleDeletePost = (id: number) => {
@@ -173,15 +188,20 @@ export const UserPage = () => {
   // };
 
   const handleReport = async (report: string, selectedReason: string) => {
-    console.log(accessToken, Number(userId), selectedReason, report);
-    const response = await createReport(
-      accessToken,
-      Number(userId),
-      selectedReason,
-      report
-    );
-    console.log(response);
-    setReportVisible(false);
+    try {
+      const response = await createReport(
+        accessToken,
+        Number(userId),
+        selectedReason,
+        report
+      );
+      console.log("[UserPage] Report created successfully:", response);
+      setReportVisible(false);
+      Alert.alert("Success", "Report submitted successfully");
+    } catch (error) {
+      console.error("[UserPage] Error creating report:", error);
+      Alert.alert("Error", "Failed to submit report. Please try again.");
+    }
   };
 
   // --- get followers and follows ---
@@ -229,63 +249,85 @@ export const UserPage = () => {
     getUsersSports(userId?.toString());
   }, []);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!userId) return;
+  // Combine all data fetching into a single function
+  const fetchAllData = useCallback(async () => {
+    if (!userId) {
+      console.error("[UserPage] fetchAllData: No userId provided");
+      return;
+    }
 
-      try {
-        const user: User = await getUserById(userId);
-        console.log("user:", user);
-        setCurrentUser(user);
-        // console.log("user:", user);
-        setUserName(user.username);
-        setFirstName(user.first_name);
+    try {
+      // Fetch user data
+      const user: User = await getUserById(userId);
+      setCurrentUser(user);
+      setUserName(user.username);
+      setFirstName(user.first_name);
 
-        // Only update the global user state if it's the current user's profile
-        if (userId === sel?.id.toString()) {
-          dispatch(updateUser(user));
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+      // Only update the global user state if it's the current user's profile
+      if (userId === sel?.id.toString()) {
+        dispatch(updateUser(user));
       }
-    };
 
-    const fetchFollowers = async () => {
+      // Fetch followers and follows
       try {
-        const follow = await getFollowsCount();
-        const followers = await getFollowersCount();
-        setFollowers(followers || []);
-        setFollows(follow || []);
+        const [followersData, followsData] = await Promise.all([
+          getFollowersCount(),
+          getFollowsCount(),
+        ]);
+        setFollowers(followersData || []);
+        setFollows(followsData || []);
       } catch (error) {
-        console.error("Error fetching followers:", error);
+        console.error("[UserPage] Error fetching followers/follows:", error);
       }
-    };
 
-    const fetchPosts = async () => {
-      if (userId) {
+      // Fetch posts
+      try {
+        const postsData = await getPostUserApi(userId, accessToken);
+        console.log("[UserPage] Fetched posts:", postsData);
+        setPosts(postsData || []);
+      } catch (error) {
+        console.error("[UserPage] Error fetching posts:", error);
+      }
+
+      // Fetch user's sports
+      try {
+        const sportsData = await usersSporst(userId.toString());
+        setSports(sportsData);
+      } catch (error) {
+        console.error("[UserPage] Error fetching sports:", error);
+      }
+
+      // Fetch user's review if not current user
+      if (!isOurUser) {
         try {
-          const response = await getPostUserApi(userId, accessToken);
-          console.log(response.map((post) => post.media_files));
-          setPosts(response || []);
+          const reviewData = await getReviewBy2IDs(
+            sel?.id.toString() || "",
+            userId.toString()
+          );
+          setUserReview(reviewData);
         } catch (error) {
-          console.error("Error fetching posts:", error);
-          console.error("Error fetching posts:", error);
+          console.error("[UserPage] Error fetching review:", error);
         }
       }
-    };
+    } catch (error) {
+      console.error("[UserPage] Error in fetchAllData:", error);
+    }
+  }, [userId, sel?.id, accessToken, isOurUser]);
 
-    fetchUserData();
-    fetchFollowers();
-    fetchPosts();
-  }, [userId]);
+  // Use useFocusEffect to refresh data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchAllData();
+    }, [fetchAllData])
+  );
 
+  // Fetch profile picture URL when currentUser changes
   useEffect(() => {
     const fetchPfpUrl = async () => {
       if (currentUser?.pfp_url) {
         try {
           const storageRef = ref(storage, currentUser.pfp_url);
           const url = await getDownloadURL(storageRef);
-          console.log("url:", url);
           setMediaUrl(url);
         } catch (error) {
           console.error("Failed to fetch avatar:", error);
@@ -296,6 +338,7 @@ export const UserPage = () => {
     fetchPfpUrl();
   }, [currentUser]);
 
+  // Animation effect
   useEffect(() => {
     Animated.timing(animation, {
       toValue: showDopInfo ? 1 : 0,
@@ -341,30 +384,34 @@ export const UserPage = () => {
   const toggleFollow = async () => {
     try {
       if (!userId) {
+        console.error("[UserPage] toggleFollow: No userId provided");
         return;
       }
 
       if (isFollowing) {
         const response = await unFollow(accessToken, userId);
-        console.log("Unfollowed:", response);
+        console.log("[UserPage] Unfollow successful:", response);
 
-        const updatedFollowers = await getFollowersCount();
+        const [updatedFollowers, updatedFollows] = await Promise.all([
+          getFollowersCount(),
+          getFollowsCount(),
+        ]);
         setFollowers(updatedFollowers || []);
-
-        const updatedFollows = await getFollowsCount();
         setFollows(updatedFollows || []);
       } else {
         const response = await follow(accessToken, userId);
-        console.log("Followed:", response);
+        console.log("[UserPage] Follow successful:", response);
 
-        const updatedFollowers = await getFollowersCount();
+        const [updatedFollowers, updatedFollows] = await Promise.all([
+          getFollowersCount(),
+          getFollowsCount(),
+        ]);
         setFollowers(updatedFollowers || []);
-
-        const updatedFollows = await getFollowsCount();
         setFollows(updatedFollows || []);
       }
-    } catch (err) {
-      console.log("Follow/unfollow error:", err);
+    } catch (error) {
+      console.error("[UserPage] Follow/unfollow error:", error);
+      Alert.alert("Error", "Failed to update follow status. Please try again.");
     }
   };
 

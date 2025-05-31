@@ -21,6 +21,8 @@ import CreateGroupChat from "@/screens/ChatGroup";
 import { AnouncementList } from "@/screens/MainFlow/AnouncementList";
 import Admin from "@/screens/Admin";
 import UserSettings from "@/screens/UserSettings";
+import { Requests } from "@/screens/MainFlow/Announcement/AnnouncementRequest";
+import { OutgoingRequests } from "@/screens/MainFlow/OutgoingRequests";
 
 export type AuthStackParamList = {
   Authorization: undefined;
@@ -40,6 +42,8 @@ export type AuthStackParamList = {
   // GroupChat: { groupId: number; groupName: string };
   AnouncementList: undefined;
   UserSettings: undefined;
+  Requests: undefined;
+  OutgoingRequests: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -130,6 +134,18 @@ export function AuthNavigator() {
         options={screenOptions}
         name="UserSettings"
         component={UserSettings}
+      />
+
+      <AuthStack.Screen
+        name="Requests"
+        component={Requests}
+        options={{ headerShown: false }}
+      />
+
+      <AuthStack.Screen
+        name="OutgoingRequests"
+        component={OutgoingRequests}
+        options={{ headerShown: false }}
       />
     </AuthStack.Navigator>
   );

@@ -63,7 +63,7 @@ const CreateGroupChat = ({ onBack }: { onBack: () => void }) => {
 
   const fetchUsers = async () => {
     try {
-      const response = await getAllUsers();
+      const response = await getAllUsers(token);
       setUsers(response);
       setFilteredUsers(response);
     } catch (error) {

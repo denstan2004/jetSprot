@@ -9,12 +9,15 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Image,
 } from "react-native";
 import { Announcement as AnnouncementType } from "@/types/Announcement";
 import { Ionicons } from "@expo/vector-icons";
 import { rem } from "@/theme/units";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "@/navigations/Stacks/Auth";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 // import getComment from "@/API/announcement/comments/getComment";
 import { useEffect } from "react";
 import { useState } from "react";
@@ -26,19 +29,37 @@ import { useSelector } from "react-redux";
 import deleteComment from "@/API/announcement/comments/deleteComment";
 import retractComment from "@/API/announcement/comments/retractComment";
 import likeComment from "@/API/announcement/comments/likeComment";
+import { createAnnouncementRequest } from "@/API/announcement/createAnnouncementRequest";
+import getUserById from "@/API/user/getUserById";
+import { storage } from "@/firebase";
+import { getDownloadURL, ref } from "firebase/storage";
+
 interface Sport {
   id: number;
   name: string;
 }
 
+interface CreatorInfo {
+  username: string;
+  pfp_url: string;
+  rating: number;
+}
+
 export const Announcement = () => {
   const route = useRoute<RouteProp<AuthStackParamList, "Announcement">>();
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const { announcement } = route.params;
+  console.log("announcement", announcement);
   const { accessToken } = useSelector((state: RootState) => state.user);
-
+  const { userData } = useSelector((state: RootState) => state.user);
+  const [requestStatus, setRequestStatus] = useState(
+    announcement.user_request_status
+  );
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<AnnouncementComment[]>([]);
+  const [creatorInfo, setCreatorInfo] = useState<CreatorInfo | null>(null);
+  const [creatorPfpUrl, setCreatorPfpUrl] = useState<string | null>(null);
 
   const getComments = async () => {
     try {
@@ -55,6 +76,24 @@ export const Announcement = () => {
   useEffect(() => {
     getComments();
   }, []);
+
+  useEffect(() => {
+    const fetchCreatorInfo = async () => {
+      try {
+        const creator = await getUserById(announcement.creator.toString());
+        setCreatorInfo(creator);
+        if (creator.pfp_url) {
+          const storageRef = ref(storage, creator.pfp_url);
+          const url = await getDownloadURL(storageRef);
+          setCreatorPfpUrl(url);
+        }
+      } catch (error) {
+        console.error("Error fetching creator info:", error);
+      }
+    };
+
+    fetchCreatorInfo();
+  }, [announcement.creator]);
 
   const handleCommentSubmit = async () => {
     try {
@@ -109,9 +148,17 @@ export const Announcement = () => {
 
   const handleRequest = async () => {
     try {
-      // TODO: Implement request functionality
-      console.log("Request button pressed for announcement:", announcement.id);
-      // Add your API call here
+      const response = await createAnnouncementRequest(
+        announcement.id,
+        accessToken
+      );
+      console.log(response);
+      if (response.status === 2) {
+        Alert.alert("Request sent successfully");
+        setRequestStatus(2);
+      } else {
+        Alert.alert("Request failed");
+      }
     } catch (error) {
       console.error("Error making request:", error);
     }
@@ -151,6 +198,36 @@ export const Announcement = () => {
               </Text>
             </View>
           </View>
+          <TouchableOpacity
+            style={styles.creatorContainer}
+            onPress={() =>
+              navigation.navigate("User", {
+                userId: announcement.creator.toString(),
+              })
+            }
+          >
+            {creatorPfpUrl ? (
+              <Image
+                source={{ uri: creatorPfpUrl }}
+                style={styles.creatorPfp}
+              />
+            ) : (
+              <View style={styles.creatorPfpPlaceholder}>
+                <Ionicons name="person" size={24} color="#5B3400" />
+              </View>
+            )}
+            <View style={styles.creatorInfo}>
+              <Text style={styles.creatorName}>
+                {creatorInfo?.username || "Loading..."}
+              </Text>
+              <View style={styles.ratingContainer}>
+                <Ionicons name="star" size={16} color="#FFD700" />
+                <Text style={styles.ratingText}>
+                  {creatorInfo?.rating || 0}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
 
           <Text style={styles.caption}>{announcement.caption}</Text>
           <ScrollView style={{ maxHeight: 100 }}>
@@ -180,12 +257,26 @@ export const Announcement = () => {
             </View>
           </View>
           <View style={styles.requestButtonContainer}>
-            <TouchableOpacity
-              style={styles.requestButton}
-              onPress={handleRequest}
-            >
-              <Text style={styles.requestButtonText}>Request</Text>
-            </TouchableOpacity>
+            {userData?.id === announcement.creator ? (
+              <Text style={styles.requestText}>
+                You created this announcement
+              </Text>
+            ) : requestStatus === 1 ? (
+              <Text style={styles.requestText}>Request accepted</Text>
+            ) : requestStatus === 0 ? (
+              <Text style={styles.requestText}>Request rejected</Text>
+            ) : requestStatus === 4 ? (
+              <Text style={styles.requestText}>Request dismissed</Text>
+            ) : requestStatus === 2 ? (
+              <Text style={styles.requestText}>Request pending</Text>
+            ) : (
+              <TouchableOpacity
+                style={styles.requestButton}
+                onPress={handleRequest}
+              >
+                <Text style={styles.requestButtonText}>Request</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -396,9 +487,57 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  requestText: {
+    color: "#AC591A",
+    fontSize: rem(18),
+    fontWeight: "600",
+  },
   requestButtonText: {
     color: "#FFFBE4",
+    fontSize: rem(18),
+    fontWeight: "600",
+  },
+  creatorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: rem(12),
+    padding: rem(8),
+    backgroundColor: "transparent",
+    borderRadius: rem(8),
+  },
+  creatorPfp: {
+    width: rem(40),
+    height: rem(40),
+    borderRadius: rem(20),
+    marginRight: rem(12),
+  },
+  creatorPfpPlaceholder: {
+    width: rem(40),
+    height: rem(40),
+    borderRadius: rem(20),
+    backgroundColor: "#FFFBE4",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: rem(12),
+    borderWidth: 1,
+    borderColor: "#AC591A",
+  },
+  creatorInfo: {
+    flex: 1,
+  },
+  creatorName: {
     fontSize: rem(16),
     fontWeight: "600",
+    color: "#5B3400",
+    marginBottom: rem(4),
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: rem(4),
+  },
+  ratingText: {
+    fontSize: rem(14),
+    color: "#5B3400",
   },
 });

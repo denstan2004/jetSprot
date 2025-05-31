@@ -52,22 +52,31 @@ const Post = ({ post }: PostProps) => {
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 
   const [author, setAuthor] = useState<User | null>(null);
-  useEffect(() => {}, [post]);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
   const creator = async () => {
-    const response = await getUserById(post.creator.toString());
-    setAuthor(response.data);
-
-    return response.data;
+    try {
+      console.log(post.creator);
+      const response = await getUserById(post.creator.toString());
+      setAuthor(response);
+      // Fetch profile photo URL if it exists
+      if (response.pfp_url) {
+        console.log(response.pfp_url);
+        const storageRef = ref(storage, response.pfp_url);
+        const url = await getDownloadURL(storageRef);
+        setMediaUrl(url);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
   };
 
   useEffect(() => {
     creator();
-  }, []);
+  }, [post.creator]);
 
   const handleProfilePress = () => {
     navigation.navigate("User", { userId: post.creator.toString() });
@@ -92,28 +101,6 @@ const Post = ({ post }: PostProps) => {
   const closeModal = () => {
     setModalVisible(false);
   };
-
-  useEffect(() => {
-    const fetchPfpUrl = async () => {
-      if (author?.pfp_url) {
-        try {
-          const storageRef = ref(storage, author.pfp_url);
-          const url = await getDownloadURL(storageRef);
-          if (
-            url.includes(
-              "https://storage.googleapis.com/sfy-firebase.appspot.com/publications/photos"
-            )
-          )
-            console.log("URL:", url);
-          setMediaUrl(url);
-        } catch (error) {
-          console.error("Failed to fetch avatar:", error);
-        }
-      }
-    };
-
-    fetchPfpUrl();
-  }, [post.media_files]);
 
   const addComment = async () => {
     try {
@@ -248,7 +235,10 @@ const Post = ({ post }: PostProps) => {
     <View key={post.id} style={styles.postCard}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfilePress}>
-          <Image source={{ uri: mediaUrl || "" }} style={styles.profileImage} />
+          <Image
+            source={{ uri: mediaUrl || "https://via.placeholder.com/40" }}
+            style={styles.profileImage}
+          />
         </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.username}>{post.creator_username}</Text>
@@ -260,10 +250,6 @@ const Post = ({ post }: PostProps) => {
       </TouchableOpacity>  */}
 
       <Text style={styles.caption}>{post.caption}</Text>
-      {/* Hashtags section */}
-      <View style={styles.hashtagsContainer}>
-        {post.hashtags && <Text style={styles.hashtag}>{post.hashtags}</Text>}
-      </View>
       <Text style={styles.description}>{post.description}</Text>
 
       {post.media_files && post.media_files.length > 0 && (
@@ -283,7 +269,9 @@ const Post = ({ post }: PostProps) => {
           {renderPaginationDots()}
         </View>
       )}
-
+      <View style={styles.hashtagsContainer}>
+        {post.hashtags && <Text style={styles.hashtag}>{post.hashtags}</Text>}
+      </View>
       <View style={styles.footer}>
         <View style={styles.likes}>
           <TouchableOpacity onPress={toggleLikePost}>

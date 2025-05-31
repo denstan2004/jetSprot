@@ -1,8 +1,8 @@
 import axios from "axios";
 import { apiUrl } from "../../apiUrl";
 
-const getUserMarkers = async (token: string) => {
-  const response = await axios.get(`${apiUrl}/marker/`, {
+export const getUserMarkers = async (token: string) => {
+  const response = await axios.get(`${apiUrl}/marker/my_markers/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
