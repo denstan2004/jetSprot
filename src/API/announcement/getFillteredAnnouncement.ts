@@ -41,10 +41,13 @@ const getFillteredAnnouncementUrl = (props: GetFillteredAnnouncementProps) => {
     return url;
 }
 export const getFillteredAnnouncement = async (token: string, props: GetFillteredAnnouncementProps) => {
+    console.log(props);
+    console.log(getFillteredAnnouncementUrl(props));
     const response = await axios.get(getFillteredAnnouncementUrl(props), {
         headers: {
             Authorization: `Bearer ${token}`,
         },
     });
+    console.log(response.data);
     return response.data;
 }
