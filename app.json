@@ -1,20 +1,23 @@
 {
   "expo": {
+    "icon": "./assets/icon.png",
     "name": "JetS",
     "slug": "JetS",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/JetSport.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#B8A782"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.maden.jetsport"
+      "bundleIdentifier": "com.maden.jetsport",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,6 +27,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5468d51b-c529-4358-8b98-04290c915cf2"
+      }
     }
   }
 }
